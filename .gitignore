@@ -1,0 +1,17 @@
+# exclude sensitive server specific configuration 
+group_vars/*
+host_keys/*
+host_vars/*
+
+# include example server configuration files
+!host_vars/x1.example.com
+!group_vars/all.example
+
+# omit rsa keys
+id_rsa
+
+# omit logs and retry files
+*.retry
+*.log
+*.pub
+hosts.*

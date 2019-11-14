@@ -1,0 +1,56 @@
+---
+#
+# Provision a container in a uniform manner to make sysadmin easier
+#
+
+# get new password from client
+- hosts: localhost
+  become: false
+  gather_facts: yes
+  vars_prompt:
+          - name: "new_password"
+            prompt: "What do you want to change default SSH user's password to?"
+            default: "password1234"
+            private: no
+  tasks:
+        # get the host machine to work on
+        - set_fact:
+                  new_password: "{{ new_password | trim }}"
+  
+# connect to hosts
+- hosts: 
+        - lxc_hosts
+        - lxd_hosts
+        - linux_backup_servers
+        - linux_containers
+        - linux_kiosks
+  become: True
+  become_method: su
+  tasks: 
+  
+        - name: 'Set ansible_user password on server'
+          user:
+                  name: "{{ ansible_user }}"
+                  update_password: always
+                  password: "{{ hostvars['localhost']['new_password'] | password_hash('sha512', 'mysalt') }}"
+
+# send notice
+- hosts: localhost
+  become: false
+  gather_facts: yes
+
+  tasks:
+        - mail:
+           host: "{{ mail.host }}"
+           port: "{{ mail.port }}"
+           username: "{{ mail.username }}"
+           password: "{{ mail.password }}"
+           to: "{{ mail.to }}"
+           subject: "[{{ ansible_date_time.date }}] Ansible > SSH User Password Changed"
+           body: >
+                   Ansible was used to change the SSH users password.
+                   
+                   Update or check for the updated record in Password Manger.
+           
+                   Update ansible_ssh_pass in /etc/ansible/group_vars/all.       
+

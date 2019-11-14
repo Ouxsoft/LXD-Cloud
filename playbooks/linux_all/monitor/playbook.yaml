@@ -1,0 +1,83 @@
+--- 
+# TRUNCATE `organization` table to get rid of any previous listed containers and populate
+- 
+  connection: ssh
+  hosts: localhost
+  tasks: 
+    - 
+      check_mode: no
+      changed_when: false
+      command: >
+        mysql --user='{{ db.codd.lxc.user }}' 
+        --password='{{ db.codd.lxc.password }}' 
+        --host='{{ db.codd.lxc.host }}'  
+        --database='{{ db.codd.lxc.database }}' 
+        --batch --skip-column-names 
+        --execute='TRUNCATE organization; TRUNCATE `server_info;'
+      delegate_to: "127.0.0.1"
+      name: "Empty MySQL Table"
+      register: stuff
+
+# connect to each linux server and run a script that gets their memory info and their containers info
+- 
+  become: true
+  become_method: su
+  become_user: root
+  connection: ssh
+  hosts: 
+    - lxc_hosts
+    - lxd_hosts
+    - linux_backup_servers
+  tasks: 
+    -
+      script: "./playbook.py --host '{{ db.codd.lxc.host }}' --user '{{ db.codd.lxc.user }}' --password '{{ db.codd.lxc.password }}' --database '{{ db.codd.lxc.database }}'"
+      name: "Execute Script"
+
+# connect and get monitoring info
+- 
+  connection: ssh
+  hosts: 
+    - lxc_hosts
+    - lxd_hosts
+    - linux_backup_servers
+    - linux_containers
+  tasks:
+  roles:
+    - zauberpony.mysql-query
+  tasks:
+    - name: 'insert server metadata'
+      mysql_query:
+        name: '{{ db.codd.lxc.database }}'
+        table: 'server_info'
+        login_host: '{{ db.codd.lxc.host }}'
+        login_user: '{{ db.codd.lxc.user }}'
+        login_password: '{{ db.codd.lxc.password }}'
+        identifiers:
+          short_name: '{{ ansible_hostname }}'
+          domain_name: '{{ inventory_hostname }}'
+        values:
+          short_name: '{{ ansible_hostname }}'
+          domain_name: '{{ inventory_hostname }}'
+          ip_address: '{{ ansible_default_ipv4.address | default("-") }}'
+          business_function: '{{ description | default("-") }}'
+          os: '{{ ansible_lsb.description }}'
+          category: '{{ group_names | join(", ") }}'
+          processor: '{{ ansible_processor | to_json }}'
+      delegate_to: "127.0.0.1"
+
+    - name: 'insert server stats'
+      mysql_query:
+        name: '{{ db.codd.lxc.database }}'
+        table: 'server_stats'
+        login_host: '{{ db.codd.lxc.host }}'
+        login_user: '{{ db.codd.lxc.user }}'
+        login_password: '{{ db.codd.lxc.password }}'
+        identifiers:
+          id: ''
+        values:
+          short_name: '{{ ansible_hostname }}'
+          memtotal_mb: '{{ ansible_memtotal_mb }}'
+          memfree_mb: '{{ ansible_memfree_mb }}'
+          mounts: '{{ ansible_mounts | to_json }}'
+      delegate_to: "127.0.0.1"
+

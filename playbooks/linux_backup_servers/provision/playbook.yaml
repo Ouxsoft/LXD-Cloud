@@ -1,0 +1,194 @@
+- hosts: linux_provision_machine
+  become: true
+  become_user: root
+  become_method: sudo
+  gather_facts: no
+
+  vars_prompt:
+    - name: "new_ip_address"
+      prompt: "What should the last part of the IP address be for this server (within the 172.16.0.___/23)?"
+      default: "255"
+      private: no
+    - name: "new_domain_name"
+      prompt: "What should the domain name of the new machine be?"
+      default: "new-server.example.com"
+      private: no
+    - name: "new_root_password"
+      prompt: "What should the root password be for the machine?"
+      default: "Change-Root-Password*"
+      private: no
+          
+  vars:
+   password_generate: "{{ lookup('password', '/dev/null length=24 chars=ascii_letters') }}"
+
+  pre_tasks:
+    - name: 'install python2'
+      raw: sudo apt-get -y install python
+
+  tasks:
+    - name: 'Add repo part 1'
+      apt_repository:
+      repo: "{{ repository.1 }}"
+       state: present
+
+    - name: 'Add repo part 2'
+      apt_repository:
+       repo: "{{ repository.2 }}"
+       state: present
+
+    - name: 'Add repo part 3'
+      apt_repository:
+       repo: "{{ repository.3 }}"
+       state: present
+
+    - name: 'Add repo part 4'
+      apt_repository:
+       repo: "{{ repository.4 }}"
+       state: present
+
+    - name: 'Apt upgrade'
+      apt:
+       upgrade: yes
+       update_cache: yes
+       cache_valid_time: 86400 #One day
+
+    - name: 'Apt dist-upgrade'
+      apt:
+       upgrade: dist
+       update_cache: yes
+       cache_valid_time: 86400 #One day
+
+    - name: 'Install a list of packages'
+      apt:
+       name: "{{ packages }}"
+      vars:
+       packages:
+        - openssh-server
+        - tcpdump
+        - python-paramiko
+        - python-mysqldb
+        - python-pexpect
+
+    - name: 'Add hosts allow'
+      blockinfile:
+       marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
+       create: yes
+       path: /etc/hosts.allow
+       block: |
+                all:127.0.0.1
+                sshd:all
+
+    - name: 'Add hosts deny'
+      blockinfile:
+       marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
+       create: yes
+       path: /etc/hosts.deny
+       block: |
+                all:all
+
+    - name: 'Remove admin from sudoers'
+      lineinfile:
+       path: /etc/sudoers
+       state: present
+       regexp: '^%admin'
+       line: '# %admin ALL=(ALL) ALL'
+       validate: '/usr/sbin/visudo -cf %s'
+
+    - name: 'Generate passwords'
+      set_fact:
+       lxd_pwd: "{{ lookup('password', '/dev/null length=44 chars=ascii_letters') }}"
+
+    - name: 'Display passwords'
+      debug:
+       msg: 
+        - "Root password '{{ new_root_password }}'"
+
+    - name: 'Store server config and password on ansible server in /etc/ansible/host_var/'
+      blockinfile:
+       marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
+       create: yes
+       path: "/etc/ansible/host_vars/{{ new_domain_name }}"
+       block: |
+               description: LXD Host (bare metal)
+               ansible_become_pass: {{ new_root_password }}
+      delegate_to: 127.0.0.1
+
+    - name: 'Set root password on server'
+      user:
+       name: root
+       update_password: always
+       password: "{{ new_root_password | password_hash('sha512', 'mysalt') }}"
+
+    # Change SSH config to allow it only to login
+    - name: 'Replace SSH config to allow user {{ ssh_username }} to SSH and Root to SSH with Key.'
+      file:
+              state: absent
+              path: "/etc/ssh/sshd_config"
+    - file:
+              state: touch
+              path: "/etc/ssh/sshd_config"
+    - lineinfile:
+              state: present
+              insertafter: EOF
+              dest: "/etc/ssh/sshd_config"
+              line: "{{ item }}"
+      with_items:
+              - "ChallengeResponseAuthentication no"
+              - "UsePAM yes"
+              - "X11Forwarding yes"
+              - "PrintMotd no"
+              - "AcceptEnv LANG LC_*"
+              - "Subsystem sftp  /usr/lib/openssh/sftp-server"
+              - ""
+              - "# allow root and {{ ssh_username }} to ssh"
+              - "AllowUsers {{ ssh_username }} root"
+              - "PasswordAuthentication yes"
+              - "PermitRootLogin yes"
+              - ""
+              - "# but limit root to SSH key only"
+              - "Match User root"
+              - "PasswordAuthentication no"
+
+    - name: 'Delete current netplan config'
+      file:
+       state: absent
+       path: /etc/netplan/50-cloud-init.yaml
+
+    - name: 'Set netplan /etc/netplan/50-cloud-init.yaml'
+      blockinfile:
+       marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
+       create: yes
+       path: "/etc/netplan/50-cloud-init.yaml"
+       block: |
+                # This file is generated from information provided by
+                # the datasource.  Changes to it will not persist across an instance.
+                # To disable cloud-init's network configuration capabilities, write a file
+                # /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg with the following:
+                # network: {config: disabled}
+                network:
+                    ethernets:
+                        eno1:
+                            addresses: 
+                                    - 172.16.0.{{ new_ip_address }}/23
+                            gateway4: 172.16.0.1       
+                            dhcp4: false
+                            nameservers:
+                                    search: 
+                                        - {{ dns_search }}
+                                    addresses:
+                                        - {{ dns_nameservers.1 }}
+                                        - {{ dns_nameservers.2 }}
+                        eno2:
+                            addresses: []
+                            dhcp4: true
+                            optional: true
+                    version: 2
+
+    - name: "Remove {{ ssh_username }} from all groups"
+      user:                            
+       name: "{{ ssh_username }}"                        
+       groups: ''                             
+       append: no
+
+    - name: 'Reboot to apply netplan and restart sshd at same time'
+      command: reboot

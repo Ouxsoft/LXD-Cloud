@@ -1,0 +1,18 @@
+- hosts: 
+        - linux_backup_servers
+        - linux_kiosks
+        - linux_containers
+        - aws_ec2
+        - lxc_hosts
+        - lxd_hosts   
+  
+  become: True
+  become_method: su
+  connection: ssh
+
+  tasks:
+    - name: Get Kernel version
+      shell: uname -r | egrep '^[0-9]*\.[0-9]*' -o
+      register: kernel_shell_output
+
+    - debug: msg="{{ kernel_shell_output.stdout}}"

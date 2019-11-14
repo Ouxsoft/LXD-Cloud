@@ -1,0 +1,17 @@
+# end if backup_server not given in run command
+- hosts: localhost  
+  tasks:
+          - meta: end_play
+            when: backup_server is not defined 
+
+# backup
+- name: Run backup playbook
+  import_playbook: backups/playbook.yaml backup_server="{{ backup_server }}"
+
+# rotate
+- name: Run rotates playbook
+  import_playbook: rotates/playbook.yaml backup_server="{{ backup_server }}"
+
+# verify
+- name: Run verify playbook
+  import_playbook: verify/playbook.yaml backup_server="{{ backup_server }}"

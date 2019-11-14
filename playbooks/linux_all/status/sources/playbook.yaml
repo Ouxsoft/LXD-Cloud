@@ -1,0 +1,14 @@
+---
+- hosts: 
+  - linux_backup_servers
+  - lxd_hosts
+  - lxc_hosts
+  - linux_containers
+  sudo: False
+  connection: ssh
+
+  tasks:
+  - name: os check
+    shell: grep ^ /etc/apt/sources.list /etc/apt/sources.list.d/*
+    register: response
+  - debug: msg="{{response.stdout_lines | replace(' \\\\n \\\\l','') }}"

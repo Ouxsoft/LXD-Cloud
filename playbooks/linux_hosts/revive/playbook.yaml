@@ -1,0 +1,10 @@
+---
+- hosts: lxd_hosts
+  become: true
+  become_method: su
+  become_user: root
+  connection: ssh
+
+  tasks:
+    - script: ./script.py
+      name: "Execute Python Revive Script"

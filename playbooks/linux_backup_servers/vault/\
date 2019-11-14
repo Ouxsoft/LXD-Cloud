@@ -1,0 +1,98 @@
+#!/usr/bin/python
+from __future__ import with_statement
+import inspect, os, shutil
+import subprocess
+import datetime
+import socket
+import string
+import sys
+
+#def main():
+#    # check if command exists
+#    response = shell_exec('ls')
+
+def output(string, clear = True):
+    # global print_cache
+    # global log_runtime
+    
+    now = '[' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ']'
+    
+    if string is None or string.isspace():
+	return
+
+    if(clear):
+    	# print_cache += now + ' ' + string.replace(' ','&nbsp;') + '<br/>\n'
+	print  now + ' ' + string
+    else:
+	# print_cache += now + ' ' + string.replace(' ','&nbsp;')
+	print  now + ' ' + string,
+        
+    # log_runtime.log(logging.INFO, string)
+
+def shell_exec(command):
+    try:
+        proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, errors = proc.communicate()
+        if errors:
+                return False
+        return output
+    except OSError as e:
+        if e.errno == os.errno.ENOENT:
+            # handle file not found error.
+            return False
+        else:
+            return False
+
+# run things
+if __name__ == "__main__":
+
+    retention_amount = 31
+    path = {}
+    path['base'] = '/vault/{folder}'
+    path['arg'] = path['base'] + '/{host}/daily/{iteration}'
+
+    print('Rotate backups')
+
+    for host in os.listdir(path['base'].format(**{'folder':'backup'})):
+        
+        output('- process [{host}]'.format(**{'host':host}))
+
+        path['host'] = {}
+        path['host']['backup']  = path['arg'].format(**{
+                'folder':'backup',
+                'host': host,
+                'iteration':'00'
+            })
+
+        path['host']['rotate'] = path['arg'].format(**{
+                'folder':'rotate',
+                'host': host,
+                'iteration':'00'
+            }) 
+
+        path['host']['expired'] = path['arg'].format(**{
+                'folder':'rotate',
+                'host': host,
+                'iteration':str(retention_amount).rjust(2, '0')
+            }) 
+
+        # if not a folder or symlink skip / do not rotate
+        if not os.path.isdir(path['host']['backup']):
+            output('  - skipping')
+            continue
+
+        # make rotate directory if not exist
+        if not os.path.isdir(path['host']['rotate']):
+	    output('  - make rotate folder: ' + path['host']['rotate'])
+            os.makedirs(path['host']['rotate'])
+
+        print(path['host']['expired'])
+        
+	# delete the oldest folder to make room for new folder
+	if os.path.isdir(path['host']['expired']):
+		output('  - Remove the oldest folder: ' + path['host']['expired'])
+	try:
+		#shell_exec('rm -r ' + path['host']['expired'])
+                output('   - success')
+	except:
+		output('   - failed')

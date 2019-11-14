@@ -1,0 +1,84 @@
+---
+#
+# Linux Vault
+# 
+# Rotation play for backup
+#
+-
+        # clean up cached files and create new file
+        hosts: localhost
+        vars:
+                timestamp: "[{{ ansible_date_time.date }} {{ ansible_date_time.time }}] "
+        tasks:
+              # recreate backup.log
+              - name: Recreate log file and add header
+                file:
+                        state: absent
+                        path: "{{ backup_server }}-rotate.log"
+              - file:
+                        state: touch
+                        path: "{{ backup_server }}-rotate.log"
+              - lineinfile:
+                        state: present
+                        insertafter: EOF
+                        dest: "{{ backup_server }}-rotate.log"
+                        line: "{{ item }}"
+                with_items:
+                        - "{{ timestamp }}### START ###"
+
+-
+        become: true
+        become_method: su
+        become_user: root
+        connection: ssh
+        hosts: "{{ backup_server }}"
+        tasks:       
+                # rotate backup 
+                - name: Rotate backups... this may take a while
+                  script: "rotates.py --host={{ item | regex_replace('.' + dns_search) }}"
+                  register: "rotate_responses"
+                  with_items: "{{ hostvars[inventory_hostname]['backup'] }}"
+                  when: hostvars[inventory_hostname]['backup'] is defined and (hostvars[inventory_hostname]['backup'] | default([]) | length > 0)
+
+                - set_fact:
+                        rotate_log:  "{{ rotate_log | default('') }}{{ rotate_responses.results | default('') }}"
+                
+                # log responses
+                - name: log rotate results
+                  lineinfile:
+                          state: present
+                          insertafter: EOF
+                          dest: "{{ backup_server }}-rotate.log"
+                          line: "{{ item.stdout | default('') | trim() }}"
+                  with_items:
+                          - "{{ rotate_log | default('') }}"
+                  delegate_to: localhost
+
+-
+        # Mail backup log
+        hosts: localhost
+        vars:
+                # setup variables
+                timestamp: "[{{ ansible_date_time.date }} {{ ansible_date_time.time }}] "
+
+        tasks:
+                # close out log file
+                - name: Close out rotate log
+                  lineinfile:
+                          state: present
+                          insertafter: EOF
+                          dest: "{{ backup_server }}-rotate.log"
+                          line: "{{ timestamp }}###  END  ###"
+                  delegate_to: localhost
+          
+                # email log file
+                - name: Mail rotate log
+                  mail:
+                          host: "{{ mail.host }}"
+                          port: "{{ mail.port }}"
+                          username: "{{ mail.username }}"
+                          password: "{{ mail.password }}"
+                          to: "{{ mail.to }}"
+                          subject: "[{{ ansible_date_time.date }}] Ansible > Vault Rotates > {{ backup_server }}"
+                          body: "{{ lookup('file', '{{ backup_server }}-rotate.log') | replace('\n','<br/>') | replace('[PASS]', '[<span style=\"color:green\">PASS</span>]') | replace('[FAIL]','[<span style=\"color:red\">FAIL</span>]') }}"
+                          subtype: html

@@ -10,6 +10,9 @@ host_vars/*
 # omit host file
 hosts
 
+# omit cron
+cron
+
 # omit rsa keys
 id_rsa
 

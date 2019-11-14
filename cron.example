@@ -1,0 +1,50 @@
+#   _     __   _______     _____ _                 _ 
+#  | |    \ \ / /  __ \   / ____| |               | |
+#  | |     \ V /| |  | | | |    | | ___  _   _  __| |
+#  | |      > < | |  | | | |    | |/ _ \| | | |/ _` |
+#  | |____ / . \| |__| | | |____| | (_) | |_| | (_| |
+#  |______/_/ \_\_____/   \_____|_|\___/ \__,_|\__,_|
+#                                                 
+#
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7)  OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  *  command to be executed
+# *  *  *  *  *  command --arg1 --arg2 file1 file2 2>&1
+
+# record the stats for servers in database for monitoring
+*/15 0-1 * * *	root	ansible-playbook        	/etc/ansible/playbooks/linux_all/monitor/playbook.yaml 
+*/15 4-23 * * * root	ansible-playbook       		/etc/ansible/playbooks/linux_all/monitor/playbook.yaml 
+
+# check health of containers and restore if container in error state
+*/30  0-1 * * *	root    ansible-playbook		/etc/ansible/playbooks/linux_hosts/revive/playbook.yaml 
+*/30 4-23 * * *	root    ansible-playbook		/etc/ansible/playbooks/linux_hosts/revive/playbook.yaml 
+
+# perform server backups, individually listed
+5 2 * * *      root	screen -d -m ansible-playbook	 /etc/ansible/playbooks/linux_backup_servers/vault/playbook.yaml --extra-vars "backup_server=x1.example.com"
+10 2 * * *     root	screen -d -m ansible-playbook	 /etc/ansible/playbooks/linux_backup_servers/vault/playbook.yaml --extra-vars "backup_server=x2.example.com"
+
+# update nagios hosts based /etc/ansible/hosts
+0 9 * * 2	root	ansible-playbook		/etc/ansible/playbooks/apps/nagios/hosts-update/playbook.yaml
+
+# update LXD hosts machines packages using repo 
+0 8 * * 2	root	screen -d -m ansible-playbook	/etc/ansible/playbooks/linux_hosts/update/playbook.yaml
+
+# get and email a list of server processes
+30 11 * * *    root    screen -d -m ansible-playbook	/etc/ansible/playbooks/linux_all/status/processes/playbook.yaml 
+
+# kill any hung ansible processes that should be done by now
+55 1 * * *	root	killall --older-than 1h ansible-playbook
+
+
+#
+# SYS ADMIN MANUAL TASKS
+#
+# AT LEAST WEEKLY : check status of LXD Cloud
+# /etc/ansible/whatisup.sh
+#
+# AT LEAST WEEKLY : update servers packages with oversight
+# screen -d -m ansible-playbook /etc/ansible/playbooks/linux_all/updates/playbook.yaml 

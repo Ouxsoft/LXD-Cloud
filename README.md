@@ -19,13 +19,13 @@ On Fedora, CentOS 8
 > sudo dnf install ansible
 (see Ansible docs for other distros)
 
-cd /etc/ansible
+> cd /etc/ansible
 
-git clone this repository there
+> git clone (this repository)
 
 ## System Configuration
 Setup each of the following Ansible files. Reference Ansible documentation.
 
-/hosts		Groups and Hosts
-/group_vars	Variables related to more then one host
-/host_vars	Variables related to a single host
+> /hosts		Groups and Hosts
+> /group_vars	Variables related to more then one host
+> /host_vars	Variables related to a single host

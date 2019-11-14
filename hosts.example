@@ -1,0 +1,28 @@
+#
+# Linux Hosts Groups
+#
+
+[ansible_servers]
+ansible.example.com
+
+# Linkx Backup Servers (Bare metal Linux Machines)
+[linux_backup_servers]
+backup-1.example.com
+backup-2.example.com
+
+# LXD Hosts (Bare metal running LXD)
+[lxd_hosts]
+host-1.example.com
+
+# Linux Containers
+[linux_containers]
+www.example.com
+
+# Linux Kiosks
+[linux_kiosks]
+kiosk-1.example.com
+
+# Nagios Servers
+[nagios_servers]
+nagios.example.com
+

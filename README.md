@@ -27,5 +27,7 @@ On Fedora, CentOS 8
 Setup each of the following Ansible files. Reference Ansible documentation.
 
 > /hosts		Groups and Hosts
+
 > /group_vars	Variables related to more then one host
+
 > /host_vars	Variables related to a single host

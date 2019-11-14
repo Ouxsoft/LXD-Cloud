@@ -7,6 +7,9 @@ host_vars/*
 !host_vars/x1.example.com
 !group_vars/all.example
 
+# omit host file
+hosts
+
 # omit rsa keys
 id_rsa
 

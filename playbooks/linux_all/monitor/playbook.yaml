@@ -25,7 +25,6 @@
   become_user: root
   connection: ssh
   hosts: 
-    - lxc_hosts
     - lxd_hosts
     - linux_backup_servers
   tasks: 
@@ -37,7 +36,6 @@
 - 
   connection: ssh
   hosts: 
-    - lxc_hosts
     - lxd_hosts
     - linux_backup_servers
     - linux_containers

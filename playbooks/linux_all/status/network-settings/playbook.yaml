@@ -2,7 +2,6 @@
 - hosts: 
   - linux_backup_servers
   - lxd_hosts
-  - lxc_hosts
   - linux_containers
   sudo: False
   connection: ssh

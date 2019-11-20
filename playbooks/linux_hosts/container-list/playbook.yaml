@@ -16,7 +16,6 @@
   connection: ssh
   hosts: 
         - lxd_hosts
-        - lxc_hosts
   tasks: 
     - 
       block:

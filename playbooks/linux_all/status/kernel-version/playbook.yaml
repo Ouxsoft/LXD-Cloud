@@ -3,7 +3,6 @@
         - linux_kiosks
         - linux_containers
         - aws_ec2
-        - lxc_hosts
         - lxd_hosts   
   
   become: True

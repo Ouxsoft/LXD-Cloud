@@ -19,7 +19,6 @@
   
 # connect to hosts
 - hosts: 
-        - lxc_hosts
         - lxd_hosts
         - linux_backup_servers
         - linux_containers

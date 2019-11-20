@@ -39,6 +39,9 @@
 # kill any hung ansible processes that should be done by now
 55 1 * * *	root	killall --older-than 1h ansible-playbook
 
+# remove old hosts files backup
+0 1 * * *       root    rm /etc/ansible/hosts.*
+
 
 #
 # SYS ADMIN MANUAL TASKS

@@ -6,22 +6,22 @@
   connection: ssh
 
   tasks:
-        - name: Update and upgrade apt packages
-          become: true
-          apt:
-            upgrade: yes
-            update_cache: yes
-            autoremove: yes
+    - name: Update and upgrade apt packages
+      become: true
+      apt:
+        upgrade: yes
+        update_cache: yes
+        autoremove: yes
 
 - hosts: localhost
   tasks:
-        - mail:
-           host: "{{ mail.host }}"
-           port: "{{ mail.port }}"
-           username: "{{ mail.username }}"
-           password: "{{ mail.password }}"
-           to: "{{ mail.to }}"
-           subject: "[{{ ansible_date_time.date }}] Ansible > Linux Hosts Updated"
-           body: "The following hosts were updated and old packages removed:<br/> {{ groups['lxd_hosts'] | join('<br/>') }}"
-           subtype: html
+    - mail:
+        host: "{{ mail.host }}"
+        port: "{{ mail.port }}"
+        username: "{{ mail.username }}"
+        password: "{{ mail.password }}"
+        to: "{{ mail.to }}"
+        subject: "[{{ ansible_date_time.date }}] Ansible > Linux Hosts Updated"
+        body: "The following hosts were updated and old packages removed:<br/> {{ groups['lxd_hosts'] | join('<br/>') }}"
+        subtype: html
 

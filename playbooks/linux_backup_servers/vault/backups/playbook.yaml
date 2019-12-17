@@ -4,191 +4,187 @@
 # 
 # Backup playbook for Linux machines. Includes support for LXC and LXD Hosts
 #
--
-        # clean up cached files and create new file
-        hosts: localhost
-        vars:
-                timestamp: "[{{ ansible_date_time.date }} {{ ansible_date_time.time }}] "
-        tasks:
-              # end if backup_server not passed
-              - meta: end_play
-                when: backup_server is not defined
-              
-              # recreate ssh_config
-              - name: Recreate ssh_config
-                file:
-                        state: absent
-                        path: ssh_config
-              - file:
-                        state: touch
-                        path: ssh_config
-              
-              # recreate backup.log
-              - name: Recreate backup.log file and add header
-                file:
-                        state: absent
-                        path: "{{ backup_server }}.log"
-              - file:
-                        state: touch
-                        path: "{{ backup_server }}.log"
-              - lineinfile:
-                        state: present
-                        insertafter: EOF
-                        dest: "{{ backup_server }}.log"
-                        line: "{{ item }}"
-                with_items:
-                        - "{{ timestamp }}### START ###"
-                        - "{{ timestamp }}Create 2048-bit SSH Key"
+- # clean up cached files and create new file
+  hosts: localhost
+  vars:
+    timestamp: "[{{ ansible_date_time.date }} {{ ansible_date_time.time }}] "
+  tasks:
+    # end if backup_server not passed
+    - meta: end_play
+      when: backup_server is not defined
 
-                # create SSH key
-              - name: create a 2048-bit SSH key for root for backups
-                user:
-                        name: root
-                        generate_ssh_key: yes
-                        ssh_key_bits: 2048
-                        ssh_key_file: "{{ playbook_dir }}/ssh_keys/{{ backup_server }}"
--
-        become: true
-        become_method: su
-        become_user: root
-        connection: ssh
-        hosts: "{{ backup_server }}"
-        vars:
-                # setup variables
-                timestamp: "[{{ ansible_date_time.date }} {{ ansible_date_time.time }}] "
+    # recreate ssh_config
+    - name: Recreate ssh_config
+      file:
+        state: absent
+        path: ssh_config
+    - file:
+        state: touch
+        path: ssh_config
 
-        tasks:
-                # install requirements to run backup script
-                - name: Install a list of packages
-                  apt:
-                          name: "{{ packages }}"
-                  vars:
-                          packages:
-                                  - "python-pip" 
-                - pip:
-                          name: tendo
-                - pip:
-                          name: paramiko 
+    # recreate backup.log
+    - name: Recreate backup.log file and add header
+      file:
+        state: absent
+        path: "{{ backup_server }}.log"
+    - file:
+        state: touch
+        path: "{{ backup_server }}.log"
+    - lineinfile:
+        state: present
+        insertafter: EOF
+        dest: "{{ backup_server }}.log"
+        line: "{{ item }}"
+      with_items:
+        - "{{ timestamp }}### START ###"
+        - "{{ timestamp }}Create 2048-bit SSH Key"
 
-                # add ssh key to backup server
-                - name: add SSH private key to backup server
-                  copy:
-                          content: "{{ lookup('file', '{{ playbook_dir}}/ssh_keys/{{ backup_server }}') }}"
-                          dest: '/root/.ssh/lxd_hosts'
-                          owner: root
-                          group: root
-                          mode: 0400
-                
-                # add ssh key to backup server
-                - name: add SSH public key to hosts
-                  include_tasks: public_key_add.yaml backup_server="{{ playbook_dir }}/ssh_keys/{{ backup_server }}"
-                  vars:
-                          backup_target_hostname: "{{ item }}" 
-                  with_items: "{{ hostvars[inventory_hostname]['backup'] }}"
-                  when: hostvars[inventory_hostname]['backup'] | default([]) | length > 0 and hostvars[item]['ansible_become_pass'] is defined
+      # create SSH key
+    - name: create a 2048-bit SSH key for root for backups
+      user:
+        name: root
+        generate_ssh_key: yes
+        ssh_key_bits: 2048
+        ssh_key_file: "{{ playbook_dir }}/ssh_keys/{{ backup_server }}"
+- become: true
+  become_method: su
+  become_user: root
+  connection: ssh
+  hosts: "{{ backup_server }}"
+  vars:
+    # setup variables
+    timestamp: "[{{ ansible_date_time.date }} {{ ansible_date_time.time }}] "
 
-                - set_fact:
-                          key_log:  "{{ key_log | default('') }}{{ timestamp }}Put public key on {{ inventory_hostname }} and private key on the hosts it will backup: {{ hostvars[inventory_hostname]['backup'] | default('none') | join(', ') }}"
+  tasks:
+    # install requirements to run backup script
+    - name: Install a list of packages
+      apt:
+        name: "{{ packages }}"
+      vars:
+        packages:
+          - "python-pip"
+    - pip:
+        name: tendo
+    - pip:
+        name: paramiko
 
-                # generate ssh config
-                - name: generate ssh config based on inventory
-                  blockinfile:
-                      marker: "# {mark} Ansible managed block"
-                      create: yes
-                      path: /root/.ssh/config
-                      block: |
-                              {% for host in hostvars[inventory_hostname]['backup'] %}
-                              # {{ host }}
-                              Host {{ host }}
-                              Hostname {{ host }}
-                              IdentityFile ~/.ssh/lxd_hosts
-                              
-                              {% endfor %}
-                  when: hostvars[inventory_hostname]['backup'] | default([]) | length > 0
+    # add ssh key to backup server
+    - name: add SSH private key to backup server
+      copy:
+        content: "{{ lookup('file', '{{ playbook_dir}}/ssh_keys/{{ backup_server }}') }}"
+        dest: '/root/.ssh/lxd_hosts'
+        owner: root
+        group: root
+        mode: 0400
 
-                # log responses
-                - name: log responses
-                  lineinfile:
-                          state: present
-                          insertafter: EOF
-                          dest: "{{ backup_server }}.log"
-                          line: "{{ item.stdout | default('') | trim() }}"
-                  with_items:
-                          - { stdout: "{{ key_log }}" } 
-                  delegate_to: localhost
-                  
--
-        become: true
-        become_method: su
-        become_user: root
-        connection: ssh
-        hosts: "{{ backup_server }}"
-        vars:
-                # setup variables
-                timestamp: "[{{ ansible_date_time.date }} {{ ansible_date_time.time }}] "
-        tasks:
+    # add ssh key to backup server
+    - name: add SSH public key to hosts
+      include_tasks: public_key_add.yaml backup_server="{{ playbook_dir }}/ssh_keys/{{ backup_server }}"
+      vars:
+        backup_target_hostname: "{{ item }}"
+      with_items: "{{ hostvars[inventory_hostname]['backup'] }}"
+      when: hostvars[inventory_hostname]['backup'] | default([]) | length > 0 and hostvars[item]['ansible_become_pass'] is defined
 
-                # ansible block to perform backups
-                - name: Backup hosts... this may take a while
-                  block:                                  
+    - set_fact:
+        key_log:  "{{ key_log | default('') }}{{ timestamp }}Put public key on {{ inventory_hostname }} and private key on the hosts it will backup: {{ hostvars[inventory_hostname]['backup'] | default('none') | join(', ') }}"
 
-                        # backup each host
-                        - name: Backup hosts
-                          script: "backup.py --fqdn={{ item }} --hostname={{ item | regex_replace('.' + dns_search) }}"
-                          register: "backup_responses"
-                          with_items: "{{ hostvars[inventory_hostname]['backup'] }}"
-                          when:  hostvars[inventory_hostname]['backup'] | default([]) | length > 0
+    # generate ssh config
+    - name: generate ssh config based on inventory
+      blockinfile:
+        marker: "# {mark} Ansible managed block"
+        create: yes
+        path: /root/.ssh/config
+        block: |
+          {% for host in hostvars[inventory_hostname]['backup'] %}
+          # {{ host }}
+          Host {{ host }}
+          Hostname {{ host }}
+          IdentityFile ~/.ssh/lxd_hosts
 
-                        - set_fact:
-                                backup_log: "{{ backup_log | default('') }}{{ backup_responses.results | default('') }}"
+          {% endfor %}
+      when: hostvars[inventory_hostname]['backup'] | default([]) | length > 0
 
-                        # log responses
-                        - name: log responses
-                          lineinfile:
-                                  state: present
-                                  insertafter: EOF
-                                  dest: "{{ backup_server }}.log"
-                                  line: "{{ item.stdout | default('') | trim() }}"
-                          with_items:
-                                  - "{{ backup_log | default('') }}" 
-                          delegate_to: localhost
+    # log responses
+    - name: log responses
+      lineinfile:
+        state: present
+        insertafter: EOF
+        dest: "{{ backup_server }}.log"
+        line: "{{ item.stdout | default('') | trim() }}"
+      with_items:
+        - { stdout: "{{ key_log }}" }
+      delegate_to: localhost
 
-                - rescue:
+- become: true
+  become_method: su
+  become_user: root
+  connection: ssh
+  hosts: "{{ backup_server }}"
+  vars:
+    # setup variables
+    timestamp: "[{{ ansible_date_time.date }} {{ ansible_date_time.time }}] "
+  tasks:
 
-                        # line files
-                        - lineinfile:
-                                  state: present
-                                  insertafter: EOF
-                                  dest: "{{ backup_server }}.log"
-                                  line: "{{ item }}"
-                          with_items:
-                                  - "{{ timestamp }}{{ inventory_hostname }} backups [FAIL]"
-                          delegate_to: localhost
--
-        # Mail backup log
-        hosts: localhost
-        vars:
-                # setup variables
-                timestamp: "[{{ ansible_date_time.date }} {{ ansible_date_time.time }}] "
-        
-        tasks:
-                # close out log file
-                - name: Close out backup log
-                  lineinfile:
-                          state: present
-                          insertafter: EOF
-                          dest: "{{ backup_server }}.log"
-                          line: "{{ timestamp }}###  END  ###"
-                  delegate_to: localhost
-          
-                # email log file
-                - name: Mail rotate log
-                  mail:
-                          host: "{{ mail.host }}"
-                          port: "{{ mail.port }}"
-                          username: "{{ mail.username }}"
-                          password: "{{ mail.password }}"
-                          to: "{{ mail.to }}"
-                          subject: "[{{ ansible_date_time.date }}] Ansible > Vault Backup > {{ backup_server }}"
-                          body: "{{ lookup('file', '{{ backup_server }}.log') | replace('\n','<br/>') | replace('[PASS]', '[<span style=\"color:green\">PASS</span>]') | replace('[FAIL]','[<span style=\"color:red\">FAIL</span>]') }}"
-                          subtype: html
+    # ansible block to perform backups
+    - name: Backup hosts... this may take a while
+      block:
+
+        # backup each host
+        - name: Backup hosts
+          script: "backup.py --fqdn={{ item }} --hostname={{ item | regex_replace('.' + dns_search) }}"
+          register: "backup_responses"
+          with_items: "{{ hostvars[inventory_hostname]['backup'] }}"
+          when:  hostvars[inventory_hostname]['backup'] | default([]) | length > 0
+
+        - set_fact:
+            backup_log: "{{ backup_log | default('') }}{{ backup_responses.results | default('') }}"
+
+        # log responses
+        - name: log responses
+          lineinfile:
+            state: present
+            insertafter: EOF
+            dest: "{{ backup_server }}.log"
+            line: "{{ item.stdout | default('') | trim() }}"
+          with_items:
+            - "{{ backup_log | default('') }}"
+          delegate_to: localhost
+
+    - rescue:
+
+        # line files
+        - lineinfile:
+            state: present
+            insertafter: EOF
+            dest: "{{ backup_server }}.log"
+            line: "{{ item }}"
+          with_items:
+            - "{{ timestamp }}{{ inventory_hostname }} backups [FAIL]"
+          delegate_to: localhost
+- # Mail backup log
+  hosts: localhost
+  vars:
+    # setup variables
+    timestamp: "[{{ ansible_date_time.date }} {{ ansible_date_time.time }}] "
+
+  tasks:
+    # close out log file
+    - name: Close out backup log
+      lineinfile:
+        state: present
+        insertafter: EOF
+        dest: "{{ backup_server }}.log"
+        line: "{{ timestamp }}###  END  ###"
+      delegate_to: localhost
+
+    # email log file
+    - name: Mail rotate log
+      mail:
+        host: "{{ mail.host }}"
+        port: "{{ mail.port }}"
+        username: "{{ mail.username }}"
+        password: "{{ mail.password }}"
+        to: "{{ mail.to }}"
+        subject: "[{{ ansible_date_time.date }}] Ansible > Vault Backup > {{ backup_server }}"
+        body: "{{ lookup('file', '{{ backup_server }}.log') | replace('\n','<br/>') | replace('[PASS]', '[<span style=\"color:green\">PASS</span>]') | replace('[FAIL]','[<span style=\"color:red\">FAIL</span>]') }}"
+        subtype: html

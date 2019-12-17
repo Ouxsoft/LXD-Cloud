@@ -4,5 +4,6 @@ https://galaxy.ansible.com/zauberpony/mysql-query  / https://github.com/zauberpo
 
 To install:
 
-apt-get install python-mysqldb
-ansible-galaxy install zauberpony.mysql-query
+```apt-get install python-mysqldb```
+
+```ansible-galaxy install zauberpony.mysql-query```

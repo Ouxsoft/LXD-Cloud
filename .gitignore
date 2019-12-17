@@ -21,3 +21,4 @@ id_rsa
 *.log
 *.pub
 hosts.*
+.idea

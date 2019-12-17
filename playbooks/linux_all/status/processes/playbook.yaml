@@ -1,25 +1,25 @@
 # create log
-- hosts: 
-        - localhost
+- hosts:
+    - localhost
   tasks:
 
     # recreate backup.log
     - name: Recreate backup.log file and add header
       file:
-              state: absent
-              path: "runtime.log"
+        state: absent
+        path: "runtime.log"
     - file:
-              state: touch
-              path: "runtime.log"
+        state: touch
+        path: "runtime.log"
 
 # get processes from each server and store to log file
-- hosts: 
-        - linux_backup_servers
-        - linux_kiosks
-        - linux_containers
-        - aws_ec2
-        - lxd_hosts   
-  
+- hosts:
+    - linux_backup_servers
+    - linux_kiosks
+    - linux_containers
+    - aws_ec2
+    - lxd_hosts
+
   become: true
   become_method: su
   become_user: root
@@ -29,31 +29,31 @@
     - name: Get process list
       shell: ps aux f
       register: shell_output
-       
+
     - lineinfile:
-              path: 'runtime.log'
-              insertafter: EOF
-              create: true
-              line: "{{ item }}"
+        path: 'runtime.log'
+        insertafter: EOF
+        create: true
+        line: "{{ item }}"
       with_items:
-              - "host [{{ inventory_hostname }}]\n\n{{ shell_output.stdout }}\n"
+        - "host [{{ inventory_hostname }}]\n\n{{ shell_output.stdout }}\n"
       delegate_to: localhost
 
 # mail log file
 - hosts: localhost
   tasks:
-        - mail:
-           host: "{{ mail.host }}"
-           port: "{{ mail.port }}"
-           username: "{{ mail.username }}"
-           password: "{{ mail.password }}"
-           to: "{{ mail.to }}"
-           subject: "[{{ ansible_date_time.date }}] Ansible > Linux Processes"
-           body: >
-                   Current Server Processes
+    - mail:
+        host: "{{ mail.host }}"
+        port: "{{ mail.port }}"
+        username: "{{ mail.username }}"
+        password: "{{ mail.password }}"
+        to: "{{ mail.to }}"
+        subject: "[{{ ansible_date_time.date }}] Ansible > Linux Processes"
+        body: >
+          Current Server Processes
 
-                   ----------------------------------
+          ----------------------------------
 
-                   {{ lookup('file', 'runtime.log') }}
+          {{ lookup('file', 'runtime.log') }}
 
-           subtype: plain
+        subtype: plain

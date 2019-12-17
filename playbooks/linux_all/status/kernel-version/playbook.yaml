@@ -1,10 +1,10 @@
-- hosts: 
-        - linux_backup_servers
-        - linux_kiosks
-        - linux_containers
-        - aws_ec2
-        - lxd_hosts   
-  
+- hosts:
+    - linux_backup_servers
+    - linux_kiosks
+    - linux_containers
+    - aws_ec2
+    - lxd_hosts
+
   become: True
   become_method: su
   connection: ssh

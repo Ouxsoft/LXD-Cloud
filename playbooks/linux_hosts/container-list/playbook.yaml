@@ -2,34 +2,30 @@
 # delete dump file
 - hosts: localhost
   tasks:
-          - name: Clean dump file
-            file:
-                    state: absent
-                    path: "/etc/ansible/playbooks/linux/status/container-list/dump.log"
-            delegate_to: 127.0.0.1
+    - name: Clean dump file
+      file:
+        state: absent
+        path: "/etc/ansible/playbooks/linux/status/container-list/dump.log"
+      delegate_to: 127.0.0.1
 
 # populate dump file with list of containers
-- 
-  become: true
+- become: true
   become_method: su
   become_user: root
   connection: ssh
-  hosts: 
-        - lxd_hosts
-  tasks: 
-    - 
-      block:
-        -
-          script: ./script.py
+  hosts:
+    - lxd_hosts
+  tasks:
+    - block:
+        - script: ./script.py
           name: "Execute Script"
           register: response
-        -
-          lineinfile:
-           path: "/etc/ansible/playbooks/linux/status/container-list/dump.log"
-           insertafter: EOF
-           create: true
-           line: "{{ item }}"
+        - lineinfile:
+            path: "/etc/ansible/playbooks/linux/status/container-list/dump.log"
+            insertafter: EOF
+            create: true
+            line: "{{ item }}"
           with_items:
-                  - "host [{{ inventory_hostname }}]"
-                  - ">> {{ response }}"
+            - "host [{{ inventory_hostname }}]"
+            - ">> {{ response }}"
           delegate_to: 127.0.0.1

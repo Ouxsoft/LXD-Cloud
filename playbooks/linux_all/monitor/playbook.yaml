@@ -1,11 +1,9 @@
---- 
+---
 # TRUNCATE `organization` table to get rid of any previous listed containers and populate
-- 
-  connection: ssh
+- connection: ssh
   hosts: localhost
-  tasks: 
-    - 
-      check_mode: no
+  tasks:
+    - check_mode: no
       changed_when: false
       command: >
         mysql --user='{{ db.codd.lxc.user }}' 
@@ -19,23 +17,20 @@
       register: stuff
 
 # connect to each linux server and run a script that gets their memory info and their containers info
-- 
-  become: true
+- become: true
   become_method: su
   become_user: root
   connection: ssh
-  hosts: 
+  hosts:
     - lxd_hosts
     - linux_backup_servers
-  tasks: 
-    -
-      script: "./playbook.py --host '{{ db.codd.lxc.host }}' --user '{{ db.codd.lxc.user }}' --password '{{ db.codd.lxc.password }}' --database '{{ db.codd.lxc.database }}'"
+  tasks:
+    - script: "./playbook.py --host '{{ db.codd.lxc.host }}' --user '{{ db.codd.lxc.user }}' --password '{{ db.codd.lxc.password }}' --database '{{ db.codd.lxc.database }}'"
       name: "Execute Script"
 
 # connect and get monitoring info
-- 
-  connection: ssh
-  hosts: 
+- connection: ssh
+  hosts:
     - lxd_hosts
     - linux_backup_servers
     - linux_containers

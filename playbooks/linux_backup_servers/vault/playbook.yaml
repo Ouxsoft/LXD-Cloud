@@ -1,8 +1,8 @@
 # end if backup_server not given in run command
-- hosts: localhost  
+- hosts: localhost
   tasks:
-          - meta: end_play
-            when: backup_server is not defined 
+    - meta: end_play
+      when: backup_server is not defined
 
 # backup
 - name: Run backup playbook

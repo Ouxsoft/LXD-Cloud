@@ -2,22 +2,20 @@
 #
 # Provision a container in a uniform manner to make sysadmin easier
 #
-- 
-  hosts: localhost
+- hosts: localhost
   become: false
   gather_facts: yes
   vars_prompt:
-          - name: "lxd_host"
-            prompt: "\n\nPROVISION A NEW CONTAINER\n\nContainer cannot be in /etc/ansible/host_vars\n\nDNS must already be setup prior to running.\n\nProvide the FQDN of host machine with enough disk space and memory to make the container:"
-            default: "host1.example.com"
-            private: no
+    - name: "lxd_host"
+      prompt: "\n\nPROVISION A NEW CONTAINER\n\nContainer cannot be in /etc/ansible/host_vars\n\nDNS must already be setup prior to running.\n\nProvide the FQDN of host machine with enough disk space and memory to make the container:"
+      default: "host1.example.com"
+      private: no
   tasks:
-          # get the host machine to work on
-          - set_fact:
-                  lxd_host: "{{ lxd_host | trim }}"
+    # get the host machine to work on
+    - set_fact:
+        lxd_host: "{{ lxd_host | trim }}"
 
-- 
-  hosts: "{{ hostvars['localhost']['lxd_host'] }}"
+- hosts: "{{ hostvars['localhost']['lxd_host'] }}"
   become: true
   become_method: su
   become_user: root
@@ -25,189 +23,189 @@
   gather_facts: no
   vars_prompt:
 
-          - name: "container_fqdn"
-            prompt: "Provide the FQDN of the container after you've assigned a DNS record:"
-            default: "www.example.com"
-            private: no
+    - name: "container_fqdn"
+      prompt: "Provide the FQDN of the container after you've assigned a DNS record:"
+      default: "www.example.com"
+      private: no
 
-          - name: "business_function"
-            prompt: "What is the business function of this server? Why should we pay to run this server?"
-            default: "SSO Shibboleth IDP"
-            private: no
-      
-          - name: "network"
-            prompt: "What network is the container on {{ hostvars['localhost']['network_bridges'] }}"
-            default: "{{ hostvars['localhost']['network_bridges'][1] }}" 
-            private: no
-      
-          - name: "ip_address"
-            prompt: "What was the CIDR assigned to the container?"
-            default: "10.0.0.2/16"
-            private: no
+    - name: "business_function"
+      prompt: "What is the business function of this server? Why should we pay to run this server?"
+      default: "SSO Shibboleth IDP"
+      private: no
 
-          - name: "gateway"
-            prompt: "What should the gateway be?"
-            default: "10.0.0.1"
-            private: no
+    - name: "network"
+      prompt: "What network is the container on {{ hostvars['localhost']['network_bridges'] }}"
+      default: "{{ hostvars['localhost']['network_bridges'][1] }}"
+      private: no
 
-          - name: "root_pwd"
-            prompt: "Set Root password:"
-            default: "Ansible-Default-Provision-Password"
-            private: no
+    - name: "ip_address"
+      prompt: "What was the CIDR assigned to the container?"
+      default: "10.0.0.2/16"
+      private: no
 
-          - name: "ssh_username"
-            prompt: "Set SSH user name?"
-            default: "{{ hostvars['localhost']['ansible_user'] | default('') }}"
-            private: no
+    - name: "gateway"
+      prompt: "What should the gateway be?"
+      default: "10.0.0.1"
+      private: no
 
-          - name: "ssh_user_pwd"
-            prompt: "Set SSH user password?"
-            default: "{{ hostvars['localhost']['ansible_ssh_pass'] | default('') }}"
-            private: no
+    - name: "root_pwd"
+      prompt: "Set Root password:"
+      default: "Ansible-Default-Provision-Password"
+      private: no
+
+    - name: "ssh_username"
+      prompt: "Set SSH user name?"
+      default: "{{ hostvars['localhost']['ansible_user'] | default('') }}"
+      private: no
+
+    - name: "ssh_user_pwd"
+      prompt: "Set SSH user password?"
+      default: "{{ hostvars['localhost']['ansible_ssh_pass'] | default('') }}"
+      private: no
 
   tasks:
-          - set_fact:
-                  container_hostname: "{{ container_fqdn | trim | regex_replace('.' + dns_search) }}"
-                  container_fqdn: "{{ container_fqdn | trim }}"
-                  ssh_user_pwd: "{{ ssh_user_pwd | trim }}"
+    - set_fact:
+        container_hostname: "{{ container_fqdn | trim | regex_replace('.' + dns_search) }}"
+        container_fqdn: "{{ container_fqdn | trim }}"
+        ssh_user_pwd: "{{ ssh_user_pwd | trim }}"
 
-          - name: Check if server exists in /etc/ansible/host_vars/{{ container_hostname }}.{{ dns_search }}
-            stat: 
-                path: /etc/ansible/host_vars/{{ container_hostname }}.{{ dns_search }}
-            register: stat_result
-            delegate_to: localhost
+    - name: Check if server exists in /etc/ansible/host_vars/{{ container_hostname }}.{{ dns_search }}
+      stat:
+        path: /etc/ansible/host_vars/{{ container_hostname }}.{{ dns_search }}
+      register: stat_result
+      delegate_to: localhost
 
-          - name: "Ending play if file in /etc/ansible/host_vars/{{ container_hostname }}.{{ dns_search }}"
-            meta: end_play
-            when: stat_result.stat.exists == True 
+    - name: "Ending play if file in /etc/ansible/host_vars/{{ container_hostname }}.{{ dns_search }}"
+      meta: end_play
+      when: stat_result.stat.exists == True
 
-          - name: 'Add repo part 1'
-            apt_repository:
-             repo: "{{ repository.1 }}"
-             state: present
-  
-          - name: 'Add repo part 2'
-            apt_repository:
-             repo: "{{ repository.2 }}"
-             state: present
-  
-          - name: 'Add repo part 3'
-            apt_repository:
-             repo: "{{ repository.3 }}"
-             state: present
-  
-          - name: 'Add repo part 4'
-            apt_repository:
-             repo: "{{ repository.4 }}"
-             state: present
-  
-          - name: 'Apt upgrade'
-            apt:
-             upgrade: yes
-             update_cache: yes
-             cache_valid_time: 86400 #One day
-  
-          - name: 'Apt dist-upgrade'
-            apt:
-             upgrade: dist
-             update_cache: yes
-             cache_valid_time: 86400 #One day
+    - name: 'Add repo part 1'
+      apt_repository:
+        repo: "{{ repository.1 }}"
+        state: present
 
-          - name: 'Install a list of packages'
-            apt:
-                    name: "{{ packages }}"
-            vars:
-                    packages:
-                            - python-pip
-                            - python-lxc
-          
-          - name: Create a started container
-            lxd_container:
-                    name: "{{ container_hostname }}"
-                    state: started
-                    source:
-                            type: image
-                            mode: pull
-                            server: https://cloud-images.ubuntu.com/daily
-                            protocol: simplestreams
-                            alias: "18.04"
-                            architecture: x86_64
-                    profiles: ["default"]
-                    timeout: 600
-                    config:
-                            user.network_mode: link-local 
-                            user.network-config: |
-                                    #cloud-config
-                                    version: 1
-                                    config:
-                                            - type: physical
-                                              name: eth0
-                                              subnets:
-                                                      - type: static
-                                                        address: {{ ip_address }}
-                                                        gateway: {{ gateway }}
-                                                        dns_nameservers:
-                                                                - {{ dns_nameservers.1 }}
-                                                                - {{ dns_nameservers.2 }} 
-                                                        dns_search:
-                                                                - {{ dns_search }}        
-                            user.user-data: |
-                                    #cloud-config
-                                    ssh_pwauth: True
-                                    user: it
-                                    chpasswd:
-                                            list: |
-                                                    root:{{ root_pwd }}
-                                                    {{ ssh_username }}:{{ ssh_user_pwd }}
-                                            expire: False
-                                    write_files:
-                                          - path: /etc/ssh/sshd_config
-                                            content: |
-                                                 AllowUsers {{ ssh_username }}
-                                                 PasswordAuthentication yes
-                                                 ChallengeResponseAuthentication no
-                                                 UsePAM yes
-                                                 X11Forwarding yes
-                                                 PrintMotd no
-                                                 AcceptEnv LANG LC_*
-                                                 Subsystem sftp  /usr/lib/openssh/sftp-server
-                                    packages:
-                                            - python-minimal
-                                    locale: en_US.UTF-8
-                                    timezone: America/New_York
+    - name: 'Add repo part 2'
+      apt_repository:
+        repo: "{{ repository.2 }}"
+        state: present
 
-                    devices: {"eth0":{"name":"eth0","nictype":"bridged","parent":"{{ network }}","type":"nic"}}
-                    wait_for_ipv4_addresses: true
+    - name: 'Add repo part 3'
+      apt_repository:
+        repo: "{{ repository.3 }}"
+        state: present
 
-          # save a record of the container
-          - name: 'Store server config and password on ansible server in /etc/ansible/host_var/'
-            blockinfile:
-                    marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
-                    create: yes
-                    path: "/etc/ansible/host_vars/{{ container_hostname }}.{{ dns_search }}"
-                    block: |
-                            description: {{ business_function }}
-                            ansible_become_pass: {{ root_pwd }}
-            delegate_to: localhost
+    - name: 'Add repo part 4'
+      apt_repository:
+        repo: "{{ repository.4 }}"
+        state: present
 
-          - ini_file:                
-                  dest: /etc/ansible/hosts
-                  section: linux_containers
-                  option: "{{ container_fqdn }} provisioned"
-                  value: "True"              
-                  backup: yes
-                  no_extra_spaces: true
-                  create: no
-                  #allow_no_value: yes
-                  state: present
-            delegate_to: localhost
+    - name: 'Apt upgrade'
+      apt:
+        upgrade: yes
+        update_cache: yes
+        cache_valid_time: 86400 #One day
 
-          - name: 'Run config playbook'
-            pause:
-                prompt: >
-                            The server was provisioned. Now it must be configured.
-                            
-                            Next, configure the server by running
-                            
-                            ansible-playbook /etc/ansible/playbooks# ansible-playbook linux_containers/configure/playbook.yaml --extra-vars "container={{ hostvars[hostvars['localhost']['lxd_host']]['container_fqdn'] }}"
+    - name: 'Apt dist-upgrade'
+      apt:
+        upgrade: dist
+        update_cache: yes
+        cache_valid_time: 86400 #One day
+
+    - name: 'Install a list of packages'
+      apt:
+        name: "{{ packages }}"
+      vars:
+        packages:
+          - python-pip
+          - python-lxc
+
+    - name: Create a started container
+      lxd_container:
+        name: "{{ container_hostname }}"
+        state: started
+        source:
+          type: image
+          mode: pull
+          server: https://cloud-images.ubuntu.com/daily
+          protocol: simplestreams
+          alias: "18.04"
+          architecture: x86_64
+        profiles: ["default"]
+        timeout: 600
+        config:
+          user.network_mode: link-local
+          user.network-config: |
+            #cloud-config
+            version: 1
+            config:
+                    - type: physical
+                      name: eth0
+                      subnets:
+                              - type: static
+                                address: {{ ip_address }}
+                                gateway: {{ gateway }}
+                                dns_nameservers:
+                                        - {{ dns_nameservers.1 }}
+                                        - {{ dns_nameservers.2 }}
+                                dns_search:
+                                        - {{ dns_search }}
+          user.user-data: |
+            #cloud-config
+            ssh_pwauth: True
+            user: it
+            chpasswd:
+                    list: |
+                            root:{{ root_pwd }}
+                            {{ ssh_username }}:{{ ssh_user_pwd }}
+                    expire: False
+            write_files:
+                  - path: /etc/ssh/sshd_config
+                    content: |
+                         AllowUsers {{ ssh_username }}
+                         PasswordAuthentication yes
+                         ChallengeResponseAuthentication no
+                         UsePAM yes
+                         X11Forwarding yes
+                         PrintMotd no
+                         AcceptEnv LANG LC_*
+                         Subsystem sftp  /usr/lib/openssh/sftp-server
+            packages:
+                    - python-minimal
+            locale: en_US.UTF-8
+            timezone: America/New_York
+
+        devices: {"eth0":{"name":"eth0","nictype":"bridged","parent":"{{ network }}","type":"nic"}}
+        wait_for_ipv4_addresses: true
+
+    # save a record of the container
+    - name: 'Store server config and password on ansible server in /etc/ansible/host_var/'
+      blockinfile:
+        marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
+        create: yes
+        path: "/etc/ansible/host_vars/{{ container_hostname }}.{{ dns_search }}"
+        block: |
+          description: {{ business_function }}
+          ansible_become_pass: {{ root_pwd }}
+      delegate_to: localhost
+
+    - ini_file:
+        dest: /etc/ansible/hosts
+        section: linux_containers
+        option: "{{ container_fqdn }} provisioned"
+        value: "True"
+        backup: yes
+        no_extra_spaces: true
+        create: no
+        #allow_no_value: yes
+        state: present
+      delegate_to: localhost
+
+    - name: 'Run config playbook'
+      pause:
+        prompt: >
+          The server was provisioned. Now it must be configured.
+
+          Next, configure the server by running
+
+          ansible-playbook /etc/ansible/playbooks# ansible-playbook linux_containers/configure/playbook.yaml --extra-vars "container={{ hostvars[hostvars['localhost']['lxd_host']]['container_fqdn'] }}"
  

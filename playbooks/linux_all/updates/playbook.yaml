@@ -1,107 +1,107 @@
 - hosts: localhost
   tasks:
 
-        - name: 'Clear log'
-          file:
-                  state: absent
-                  path: "update.log"
-        - file:
-                state: touch
-                path: "update.log"
+    - name: 'Clear log'
+      file:
+        state: absent
+        path: "update.log"
+    - file:
+        state: touch
+        path: "update.log"
 
-- hosts: 
-       - aws_ec2
-       - linux_backup_servers
-       - lxd_hosts
-       - linux_containers
-       - linux_kiosks
+- hosts:
+    - aws_ec2
+    - linux_backup_servers
+    - lxd_hosts
+    - linux_containers
+    - linux_kiosks
   become: true
   become_method: su
   become_user: root
 
   tasks:
 
-        - name: 'Apt Update'
-          apt:
-                update-cache: yes
+    - name: 'Apt Update'
+      apt:
+        update-cache: yes
 
-        - name: 'Check for upgradeable'
-          apt:
-            upgrade: Yes
-          check_mode: True
-          register: upgrade_info
+    - name: 'Check for upgradeable'
+      apt:
+        upgrade: Yes
+      check_mode: True
+      register: upgrade_info
 
-        - set_fact:
-                packages_upgradable: "{{ upgrade_info.stdout }}"
-        
-
-        - name: 'Ask user what they want to update'
-          pause:
-                prompt: >
-                        Perform updates to {{ item | default('') }} (yes/no)?
+    - set_fact:
+        packages_upgradable: "{{ upgrade_info.stdout }}"
 
 
-                        {{ hostvars[item]['packages_upgradable'] | default ('') | indent(8, True) }}
+    - name: 'Ask user what they want to update'
+      pause:
+        prompt: >
+          Perform updates to {{ item | default('') }} (yes/no)?
 
-          register: update_response
-          delegate_to: localhost
-          with_items: "{{ ansible_play_hosts }}"
 
-        - name: 'Store responses to file'
-          copy: 
-                content: > 
-                        [hosts]                       
-                        {% for record in hostvars[inventory_hostname]['update_response']['results'] %}
-                        
+          {{ hostvars[item]['packages_upgradable'] | default ('') | indent(8, True) }}
 
-                        {{ record['item'] }}={{ record['user_input'] }}
-                        {% endfor %}                 
-                dest: update.ini
-          delegate_to: localhost
-          ignore_errors: yes
+      register: update_response
+      delegate_to: localhost
+      with_items: "{{ ansible_play_hosts }}"
 
-        - name: 'Update and upgrade apt packages'
-          apt:
-                  upgrade: yes
-                  update_cache: yes
-                  autoremove: yes
-          when: lookup('ini', inventory_hostname + ' section=hosts file=update.ini')  == 'yes'
-          register: update_log
-    
-        - lineinfile:
-                  state: present
-                  insertafter: EOF
-                  dest: "update.log"
-                  line: >
-                          [{{ inventory_hostname }}] 
-                          
-                          {{ item }}
-          with_items:
-                  - "{{ update_log.stdout }}"
-          delegate_to: localhost
+    - name: 'Store responses to file'
+      copy:
+        content: >
+          [hosts]
+          {% for record in hostvars[inventory_hostname]['update_response']['results'] %}
+
+
+          {{ record['item'] }}={{ record['user_input'] }}
+          {% endfor %}
+        dest: update.ini
+      delegate_to: localhost
+      ignore_errors: yes
+
+    - name: 'Update and upgrade apt packages'
+      apt:
+        upgrade: yes
+        update_cache: yes
+        autoremove: yes
+      when: lookup('ini', inventory_hostname + ' section=hosts file=update.ini')  == 'yes'
+      register: update_log
+
+    - lineinfile:
+        state: present
+        insertafter: EOF
+        dest: "update.log"
+        line: >
+          [{{ inventory_hostname }}]
+
+          {{ item }}
+      with_items:
+        - "{{ update_log.stdout }}"
+      delegate_to: localhost
 
 - hosts: localhost
   tasks:
-        - mail:
-           host: "{{ mail.host }}"
-           port: "{{ mail.port }}"
-           username: "{{ mail.username }}"
-           password: "{{ mail.password }}"
-           to: "{{ mail.to }}"
-           subject: "[{{ ansible_date_time.date }}] Ansible > Linux Servers Updated"
-           body: >
-                   Update Overview
-                   
-                   ----------------------------------
+    - mail:
+        host: "{{ mail.host }}"
+        port: "{{ mail.port }}"
+        username: "{{ mail.username }}"
+        password: "{{ mail.password }}"
+        to: "{{ mail.to }}"
+        subject: "[{{ ansible_date_time.date }}] Ansible > Linux Servers Updated"
+        body: >
+          Update Overview
 
-                   {{ lookup('file', 'update.ini') }}
-                   
-                   
-                   Update Log
-                   
-                   ----------------------------------
-        
-                   {{ lookup('file', 'update.log') }}
+          ----------------------------------
+
+          {{ lookup('file', 'update.ini') }}
 
 
-           subtype: plain
+          Update Log
+
+          ----------------------------------
+
+          {{ lookup('file', 'update.log') }}
+
+
+        subtype: plain

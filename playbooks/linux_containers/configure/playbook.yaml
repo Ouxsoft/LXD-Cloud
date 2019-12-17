@@ -1,10 +1,9 @@
 ---
 - hosts: localhost
   tasks:
-          # refresh inventory to include new server
-          - meta: refresh_inventory
--
-  hosts: linux_containers
+    # refresh inventory to include new server
+    - meta: refresh_inventory
+- hosts: linux_containers
   become: true
   become_method: su
   become_user: root
@@ -15,83 +14,83 @@
 
     - name: "Wait for SSH Port (22) to open on host"
       wait_for:
-            port: 22
+        port: 22
 
   tasks:
- 
-          - debug:
-                  msg: "{{ container }}"
 
-          - name: 'Add repo part 1'
-            apt_repository:
-             repo: "{{ repository.1 }}"
-             state: present
+    - debug:
+        msg: "{{ container }}"
 
-          - name: 'Add repo part 2'
-            apt_repository:
-             repo: "{{ repository.2 }}"
-             state: present
+    - name: 'Add repo part 1'
+      apt_repository:
+        repo: "{{ repository.1 }}"
+        state: present
 
-          - name: 'Add repo part 3'
-            apt_repository:
-             repo: "{{ repository.3 }}"
-             state: present
+    - name: 'Add repo part 2'
+      apt_repository:
+        repo: "{{ repository.2 }}"
+        state: present
 
-          - name: 'Add repo part 4'
-            apt_repository:
-             repo: "{{ repository.4 }}"
-             state: present
- 
-          - name: 'Apt upgrade'
-            apt:
-                    upgrade: yes
-                    update_cache: yes
-                    cache_valid_time: 86400 #One day
-      
-          - name: 'Apt dist-upgrade'
-            apt:
-                    upgrade: dist
-                    update_cache: yes
-                    cache_valid_time: 86400 #One day
-      
-          - name: 'Install a list of packages'
-            apt:
-                    name: "{{ packages }}"
-            vars:
-                    packages:
-                            - tcpdump
-      
-                              #          - name: 'Add hosts allow'
-                              #            blockinfile:
-                              #                    marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
-                              #                    create: yes
-                              #                    path: /etc/hosts.allow
-                              #                    block: |
-                              #                             all:127.0.0.1
-                              #                             sshd:all
-                              #      
-                              #          - name: 'Add hosts deny'
-                              #            blockinfile:
-                              #                    marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
-                              #                    create: yes
-                              #                    path: /etc/hosts.deny
-                              #                    block: |
-                              #                             all:all
+    - name: 'Add repo part 3'
+      apt_repository:
+        repo: "{{ repository.3 }}"
+        state: present
+
+    - name: 'Add repo part 4'
+      apt_repository:
+        repo: "{{ repository.4 }}"
+        state: present
+
+    - name: 'Apt upgrade'
+      apt:
+        upgrade: yes
+        update_cache: yes
+        cache_valid_time: 86400 #One day
+
+    - name: 'Apt dist-upgrade'
+      apt:
+        upgrade: dist
+        update_cache: yes
+        cache_valid_time: 86400 #One day
+
+    - name: 'Install a list of packages'
+      apt:
+        name: "{{ packages }}"
+      vars:
+        packages:
+          - tcpdump
+
+            #          - name: 'Add hosts allow'
+            #            blockinfile:
+            #                    marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
+            #                    create: yes
+            #                    path: /etc/hosts.allow
+            #                    block: |
+            #                             all:127.0.0.1
+            #                             sshd:all
+            #
+            #          - name: 'Add hosts deny'
+            #            blockinfile:
+            #                    marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
+            #                    create: yes
+            #                    path: /etc/hosts.deny
+            #                    block: |
+          #                             all:all
 
 
-          - name: Remove "sudo" package
-            apt:
-                    name: sudo
-                    state: absent
+    - name: Remove "sudo" package
+      apt:
+        name: sudo
+        state: absent
 
-          - name: 'Remove SSH user from all groups'
-            user:
-                name: "{{ ansible_user }}"
-                groups: ''
-                append: no
+    - name: 'Remove SSH user from all groups'
+      user:
+        name: "{{ ansible_user }}"
+        groups: ''
+        append: no
 
-            
-          - name: 'Set timezone America/New_York'
-            timezone:
-                    name: America/New_York
+
+    - name: 'Set timezone America/New_York'
+      timezone:
+        name: America/New_York
 

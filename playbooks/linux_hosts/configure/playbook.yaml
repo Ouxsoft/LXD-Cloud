@@ -1,64 +1,63 @@
 ---
-- 
-  become: true
+- become: true
   become_method: su
   become_user: root
   connection: ssh
-  hosts: 
-        - lxd_hosts
+  hosts:
+    - lxd_hosts
   tasks:
     - name: set timezone America/New_York
       timezone:
-              name: America/New_York
+        name: America/New_York
     - name: "Remove {{ ansible_user }} from all groups"
       user:
-       name: "{{ ansible_user }}"
-       groups: ''
-       append: no
+        name: "{{ ansible_user }}"
+        groups: ''
+        append: no
 
     # Change SSH config to allow it only to login
     - name: 'Replace SSH config to allow user {{ ansible_user }} to SSH and Root to SSH with Key.'
       file:
-              state: absent
-              path: "/etc/ssh/sshd_config"
+        state: absent
+        path: "/etc/ssh/sshd_config"
     - file:
-              state: touch
-              path: "/etc/ssh/sshd_config"
+        state: touch
+        path: "/etc/ssh/sshd_config"
     - lineinfile:
-              state: present
-              insertafter: EOF
-              dest: "/etc/ssh/sshd_config"
-              line: "{{ item }}"
+        state: present
+        insertafter: EOF
+        dest: "/etc/ssh/sshd_config"
+        line: "{{ item }}"
       with_items:
-              - "ChallengeResponseAuthentication no"
-              - "UsePAM yes"
-              - "X11Forwarding yes"
-              - "PrintMotd no"
-              - "AcceptEnv LANG LC_*"
-              - "Subsystem sftp  /usr/lib/openssh/sftp-server"
-              - ""
-              - "# allow root and {{ ansible_user }} to ssh"
-              - "AllowUsers {{ ansible_user }} root"
-              - "PasswordAuthentication yes"
-              - "PermitRootLogin yes"
-              - ""
-              - "# but limit root to SSH key only"
-              - "Match User root"
-              - "PasswordAuthentication no"
- 
+        - "ChallengeResponseAuthentication no"
+        - "UsePAM yes"
+        - "X11Forwarding yes"
+        - "PrintMotd no"
+        - "AcceptEnv LANG LC_*"
+        - "Subsystem sftp  /usr/lib/openssh/sftp-server"
+        - ""
+        - "# allow root and {{ ansible_user }} to ssh"
+        - "AllowUsers {{ ansible_user }} root"
+        - "PasswordAuthentication yes"
+        - "PermitRootLogin yes"
+        - ""
+        - "# but limit root to SSH key only"
+        - "Match User root"
+        - "PasswordAuthentication no"
+
     - name: Remove "sudo" package
       apt:
-              name: sudo
-              state: absent
+        name: sudo
+        state: absent
 
     - name: "Remove {{ ansible_user }} from all groups"
       user:
-               name: "{{ ansible_user }}"
-               groups: ''
-               append: no
+        name: "{{ ansible_user }}"
+        groups: ''
+        append: no
 
     - name: 'SSHD restart to load new config'
       service:
 
-              name: sshd
-              state: restarted
+        name: sshd
+        state: restarted

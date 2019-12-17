@@ -4,79 +4,76 @@
 # 
 # Rotation play for backup
 #
--
-        # clean up cached files and create new file
-        hosts: localhost
-        vars:
-                timestamp: "[{{ ansible_date_time.date }} {{ ansible_date_time.time }}] "
-        tasks:
-              # recreate backup.log
-              - name: Recreate log file and add header
-                file:
-                        state: absent
-                        path: "{{ backup_server }}-verify.log"
-              - file:
-                        state: touch
-                        path: "{{ backup_server }}-verify.log"
-              - lineinfile:
-                        state: present
-                        insertafter: EOF
-                        dest: "{{ backup_server }}-verify.log"
-                        line: "{{ item }}"
-                with_items:
-                        - "{{ timestamp }}### START ###"
+- # clean up cached files and create new file
+  hosts: localhost
+  vars:
+    timestamp: "[{{ ansible_date_time.date }} {{ ansible_date_time.time }}] "
+  tasks:
+    # recreate backup.log
+    - name: Recreate log file and add header
+      file:
+        state: absent
+        path: "{{ backup_server }}-verify.log"
+    - file:
+        state: touch
+        path: "{{ backup_server }}-verify.log"
+    - lineinfile:
+        state: present
+        insertafter: EOF
+        dest: "{{ backup_server }}-verify.log"
+        line: "{{ item }}"
+      with_items:
+        - "{{ timestamp }}### START ###"
 
--
-        become: true
-        become_method: su
-        become_user: root
-        connection: ssh
-        hosts: "{{ backup_server }}"
-        tasks:       
-                # rotate backup 
-                - name: 'verify backups... this may take a while'
-                  shell: "/usr/bin/du --human-readable --time --summarize --total /vault/backup/*/daily/*/var/lib/lxd/storage-pools/*/containers/*/rootfs"
-                  register: "verify_responses"
+- become: true
+  become_method: su
+  become_user: root
+  connection: ssh
+  hosts: "{{ backup_server }}"
+  tasks:
+    # rotate backup
+    - name: 'verify backups... this may take a while'
+      shell: "/usr/bin/du --human-readable --time --summarize --total /vault/backup/*/daily/*/var/lib/lxd/storage-pools/*/containers/*/rootfs"
+      register: "verify_responses"
 
-                - set_fact:
-                        verify_log:  "{{ verify_log | default('') }}{{ verify_responses | default('') }}"
-                
-                # log responses
-                - name: 'log results'
-                  lineinfile:
-                          state: present
-                          insertafter: EOF
-                          dest: "{{ backup_server }}-verify.log"
-                          line: "{{ item.stdout | default('') | trim() }}"
-                  with_items:
-                          - "{{ verify_log | default('') }}"
-                  delegate_to: localhost
+    - set_fact:
+        verify_log:  "{{ verify_log | default('') }}{{ verify_responses | default('') }}"
 
--
-        # Mail backup log
-        hosts: localhost
-        vars:
-                # setup variables
-                timestamp: "[{{ ansible_date_time.date }} {{ ansible_date_time.time }}] "
+    # log responses
+    - name: 'log results'
+      lineinfile:
+        state: present
+        insertafter: EOF
+        dest: "{{ backup_server }}-verify.log"
+        line: "{{ item.stdout | default('') | trim() }}"
+      with_items:
+        - "{{ verify_log | default('') }}"
+      delegate_to: localhost
 
-        tasks:
-                # close out log file
-                - name: 'close out log'
-                  lineinfile:
-                          state: present
-                          insertafter: EOF
-                          dest: "{{ backup_server }}-verify.log"
-                          line: "{{ timestamp }}###  END  ###"
-                  delegate_to: localhost
-          
-                # email log file
-                - name: Mail rotate log
-                  mail:
-                          host: "{{ mail.host }}"
-                          port: "{{ mail.port }}"
-                          username: "{{ mail.username }}"
-                          password: "{{ mail.password }}"
-                          to: "{{ mail.to }}"
-                          subject: "[{{ ansible_date_time.date }}] Ansible > Verify Rotates > {{ backup_server }}"
-                          body: "{{ lookup('file', '{{ backup_server }}-verify.log') | replace('\n','<br/>') | replace(' ','&nbsp;') }}"
-                          subtype: html
+- # Mail backup log
+  hosts: localhost
+  vars:
+    # setup variables
+    timestamp: "[{{ ansible_date_time.date }} {{ ansible_date_time.time }}] "
+
+  tasks:
+    # close out log file
+    - name: 'close out log'
+      lineinfile:
+        state: present
+        insertafter: EOF
+        dest: "{{ backup_server }}-verify.log"
+        line: "{{ timestamp }}###  END  ###"
+      delegate_to: localhost
+
+    # email log file
+    - name: Mail rotate log
+      mail:
+        host: "{{ mail.host }}"
+        port: "{{ mail.port }}"
+        username: "{{ mail.username }}"
+        password: "{{ mail.password }}"
+        to: "{{ mail.to }}"
+        subject: "[{{ ansible_date_time.date }}] Ansible > Verify Rotates > {{ backup_server }}"
+        body: "{{ lookup('file', '{{ backup_server }}-verify.log') | replace('\n','<br/>') | replace(' ','&nbsp;') }}"
+        subtype: html

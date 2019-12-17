@@ -1,12 +1,12 @@
-  - name: Install ssh key and handle errors
-    block:
-        - name: set SSH public key on host server (Troubleshoot by ensuring there isn't a prompt when SSHing between servers both ways. There may be a issue with known hosts)
-          authorized_key:
-              user: root
-              state: present
-              key: "{{ lookup('file', '{{ playbook_dir }}/ssh_keys/{{ backup_server }}.pub') }}"
-              exclusive: True
-          delegate_to: "{{ backup_target_hostname }}"
-    rescue:
-      - debug:
-          msg: "Error keying server {{ backup_target_hostname }}" 
+- name: Install ssh key and handle errors
+  block:
+    - name: set SSH public key on host server (Troubleshoot by ensuring there isn't a prompt when SSHing between servers both ways. There may be a issue with known hosts)
+      authorized_key:
+        user: root
+        state: present
+        key: "{{ lookup('file', '{{ playbook_dir }}/ssh_keys/{{ backup_server }}.pub') }}"
+        exclusive: True
+      delegate_to: "{{ backup_target_hostname }}"
+  rescue:
+    - debug:
+        msg: "Error keying server {{ backup_target_hostname }}"

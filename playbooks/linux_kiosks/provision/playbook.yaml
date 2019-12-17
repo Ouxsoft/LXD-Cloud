@@ -25,10 +25,10 @@
       prompt: "What address should this KIOSK be setup for?"
       default: "https://catalog.example.com/cgi-bin/koha/sco/sco-main.pl"
       private: no
-          
+
   vars:
-          apt_file: /etc/apt/sources.list.d/google-chrome.list
-          kiosk_password: "CheckoutBooks*"
+    apt_file: /etc/apt/sources.list.d/google-chrome.list
+    kiosk_password: "CheckoutBooks*"
 
   pre_tasks:
     - name: 'install python2'
@@ -37,45 +37,45 @@
   tasks:
     - name: set timezone America/New_York
       timezone:
-              name: America/New_York
+        name: America/New_York
 
       # cannot use glimmer repo as on different network
 
     # Change SSH config to restrict login
     - name: 'Clear out /etc/apt/sources.list so we can add back in main restricted universe and multiverse'
       file:
-              state: absent
-              path: "/etc/apt/sources.list"
+        state: absent
+        path: "/etc/apt/sources.list"
     - file:
-              state: touch
-              path: "/etc/apt/sources.list"
+        state: touch
+        path: "/etc/apt/sources.list"
     - lineinfile:
-              state: present
-              insertafter: EOF
-              dest: "/etc/apt/sources.list"
-              line: "{{ item }}"
+        state: present
+        insertafter: EOF
+        dest: "/etc/apt/sources.list"
+        line: "{{ item }}"
       with_items:
-              - ""
+        - ""
 
     - name: 'Add extra repo partt 1'
       apt_repository:
-       repo: "{{ repository.1 }}"
-       state: present
+        repo: "{{ repository.1 }}"
+        state: present
 
     - name: 'Add extra repo part 2'
       apt_repository:
-       repo: "{{ repository.2 }}"
-       state: present
+        repo: "{{ repository.2 }}"
+        state: present
 
     - name: 'Add extra repo part 3'
       apt_repository:
-       repo: "{{ repository.3 }}"
-       state: present
+        repo: "{{ repository.3 }}"
+        state: present
 
     - name: 'Add extra repo part 4'
       apt_repository:
-       repo: "{{ repository.4 }}"
-       state: present
+        repo: "{{ repository.4 }}"
+        state: present
 
       # install google chrome
     - name: Does the Google apt file exist?
@@ -100,28 +100,28 @@
 
     - name: 'Apt upgrade'
       apt:
-       upgrade: yes
-       update_cache: yes
-       cache_valid_time: 86400 #One day
+        upgrade: yes
+        update_cache: yes
+        cache_valid_time: 86400 #One day
 
     - name: 'Apt dist-upgrade'
       apt:
-       upgrade: dist
-       update_cache: yes
-       cache_valid_time: 86400 #One day
+        upgrade: dist
+        update_cache: yes
+        cache_valid_time: 86400 #One day
 
     - name: 'Install a list of packages'
       apt:
-       name: "{{ packages }}"
+        name: "{{ packages }}"
       vars:
-       packages:
-        - openssh-server
-        - tcpdump
-        - vim
-        - xorg
-        - openbox
-        - pulseaudio
-        - xserver-xorg-legacy
+        packages:
+          - openssh-server
+          - tcpdump
+          - vim
+          - xorg
+          - openbox
+          - pulseaudio
+          - xserver-xorg-legacy
 
     - name: 'Remove Cloud Init to minimize display during boot'
       apt:
@@ -133,224 +133,224 @@
         name: kiosk
         password: "{{ kiosk_password | password_hash('sha512', 'mysalt') }}"
         shell: /bin/bash
-        groups: 
-                - audio
+        groups:
+          - audio
         createhome: yes
         home: /home/kiosk
         state: present
 
     - name: 'Make /home/kiosk/.xsession script which starts Chrome.'
       file:
-              state: absent
-              path: "/usr/bin/kiosk.sh"
+        state: absent
+        path: "/usr/bin/kiosk.sh"
     - file:
-              state: touch
-              path: "/usr/bin/kiosk.sh"
+        state: touch
+        path: "/usr/bin/kiosk.sh"
     - lineinfile:
-              state: present
-              insertafter: EOF
-              dest: "/usr/bin/kiosk.sh"
-              line: "{{ item }}"
+        state: present
+        insertafter: EOF
+        dest: "/usr/bin/kiosk.sh"
+        line: "{{ item }}"
       with_items:
-              - "#!/bin/bash"
-              - ""
-              - "xset -dpms"
-              - "xset s off"
-              - "openbox-session &"
-              - "start-pulseaudio-x11"
-              - ""
-              - "while true; do"
-              - " rm -rf ~/.{config,cache}/google-chrome/"
-              - " google-chrome --kiosk --incognito --no-first-run  '{{ kiosk_url }}'"
-              - "done"
+        - "#!/bin/bash"
+        - ""
+        - "xset -dpms"
+        - "xset s off"
+        - "openbox-session &"
+        - "start-pulseaudio-x11"
+        - ""
+        - "while true; do"
+        - " rm -rf ~/.{config,cache}/google-chrome/"
+        - " google-chrome --kiosk --incognito --no-first-run  '{{ kiosk_url }}'"
+        - "done"
     - name: 'Change permission of /usr/bin/kiosk.sh, adding "+x"'
       file: dest=/usr/bin/kiosk.sh mode=a+x
 
     - name: 'Make /lib/systemd/system/kiosk.conf which starts xsession and runs /usr/bin/kiosk.sh'
       file:
-              state: absent
-              path: "/lib/systemd/system/kiosk.service"
+        state: absent
+        path: "/lib/systemd/system/kiosk.service"
     - file:
-              state: touch
-              path: "/lib/systemd/system/kiosk.service"
+        state: touch
+        path: "/lib/systemd/system/kiosk.service"
     - lineinfile:
-              state: present
-              insertafter: EOF
-              dest: "/lib/systemd/system/kiosk.service"
-              line: "{{ item }}"
+        state: present
+        insertafter: EOF
+        dest: "/lib/systemd/system/kiosk.service"
+        line: "{{ item }}"
       with_items:
-              - "[Unit]"
-              - "Description=Kiosk Launcher"
-              - "After=systemd-user-sessions.service"
-              - ""
-              - "[Service]"
-              - "# specify service to start with kiosk user"          
-              - "User=kiosk"
-              - "ExecStart=/usr/bin/startx /usr/bin/kiosk.sh"
-              - "Restart=always"
-              - ""
-              - "[Install]"
-              - "WantedBy=multi-user.target"   
+        - "[Unit]"
+        - "Description=Kiosk Launcher"
+        - "After=systemd-user-sessions.service"
+        - ""
+        - "[Service]"
+        - "# specify service to start with kiosk user"
+        - "User=kiosk"
+        - "ExecStart=/usr/bin/startx /usr/bin/kiosk.sh"
+        - "Restart=always"
+        - ""
+        - "[Install]"
+        - "WantedBy=multi-user.target"
 
     - name: 'Change /etc/X11/Xwrapper.config to allow anybody to run'
       file:
-              state: absent
-              path: "/etc/X11/Xwrapper.config"
+        state: absent
+        path: "/etc/X11/Xwrapper.config"
     - file:
-              state: touch
-              path: "/etc/X11/Xwrapper.config"
+        state: touch
+        path: "/etc/X11/Xwrapper.config"
     - lineinfile:
-              state: present
-              insertafter: EOF
-              dest: "/etc/X11/Xwrapper.config"
-              line: "{{ item }}"
+        state: present
+        insertafter: EOF
+        dest: "/etc/X11/Xwrapper.config"
+        line: "{{ item }}"
       with_items:
-              - "allowed_users=anybody"
-              - "needs_root_rights=yes"
+        - "allowed_users=anybody"
+        - "needs_root_rights=yes"
 
     - name: 'Start Kiosk service'
       service:
-              name: kiosk
-              state: started
+        name: kiosk
+        state: started
 
     - name: 'Using systemctl enable kiosk to start on boot'
       command: systemctl enable kiosk
 
     - name: 'Update /etc/default/grub to quite garbage that prints to screen'
       file:
-              state: absent
-              path: "/etc/default/grub"
+        state: absent
+        path: "/etc/default/grub"
     - file:
-              state: touch
-              path: "/etc/default/grub"
+        state: touch
+        path: "/etc/default/grub"
     - lineinfile:
-              state: present
-              insertafter: EOF
-              dest: "/etc/default/grub"
-              line: "{{ item }}"
+        state: present
+        insertafter: EOF
+        dest: "/etc/default/grub"
+        line: "{{ item }}"
       with_items:
-              - "GRUB_DEFAULT=0"
-              - "GRUB_HIDDEN_TIMEOUT=0"
-              - "GRUB_HIDDEN_TIMEOUT_QUIET=true"
-              - "GRUB_TIMEOUT=0"
-              - "GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`"
-              - 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"'
-              - 'GRUB_CMDLINE_LINUX="quiet"'
-              - "GRUB_RECORDFAIL_TIMEOUT=0"
+        - "GRUB_DEFAULT=0"
+        - "GRUB_HIDDEN_TIMEOUT=0"
+        - "GRUB_HIDDEN_TIMEOUT_QUIET=true"
+        - "GRUB_TIMEOUT=0"
+        - "GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`"
+        - 'GRUB_CMDLINE_LINUX_DEFAULT="quiet"'
+        - 'GRUB_CMDLINE_LINUX="quiet"'
+        - "GRUB_RECORDFAIL_TIMEOUT=0"
     - name: 'Update grub'
       command: update-grub
 
     - name: 'Add hosts allow'
       blockinfile:
-       marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
-       create: yes
-       path: /etc/hosts.allow
-       block: |
-                all:127.0.0.1
-                sshd:all
+        marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
+        create: yes
+        path: /etc/hosts.allow
+        block: |
+          all:127.0.0.1
+          sshd:all
 
     - name: 'Add hosts deny'
       blockinfile:
-       marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
-       create: yes
-       path: /etc/hosts.deny
-       block: |
-                all:all
+        marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
+        create: yes
+        path: /etc/hosts.deny
+        block: |
+          all:all
 
     - name: 'Remove admin from sudoers'
       lineinfile:
-       path: /etc/sudoers
-       state: present
-       regexp: '^%admin'
-       line: '# %admin ALL=(ALL) ALL'
-       validate: '/usr/sbin/visudo -cf %s'
+        path: /etc/sudoers
+        state: present
+        regexp: '^%admin'
+        line: '# %admin ALL=(ALL) ALL'
+        validate: '/usr/sbin/visudo -cf %s'
 
     - name: 'Display passwords'
       debug:
-       msg: 
-        - "Root password '{{ new_root_password }}'"
-       
+        msg:
+          - "Root password '{{ new_root_password }}'"
+
     - name: 'Store server config and password on ansible server in /etc/ansible/host_var/'
       blockinfile:
-       marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
-       create: yes
-       path: "/etc/ansible/host_vars/{{ new_domain_name }}"
-       block: |
-               description: Kiosk (bare metal)
-               ansible_become_pass: {{ new_root_password }}
+        marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
+        create: yes
+        path: "/etc/ansible/host_vars/{{ new_domain_name }}"
+        block: |
+          description: Kiosk (bare metal)
+          ansible_become_pass: {{ new_root_password }}
       delegate_to: 127.0.0.1
 
     - name: 'Set root password on server'
       user:
-       name: root
-       update_password: always
-       password: "{{ new_root_password | password_hash('sha512', 'mysalt') }}"
+        name: root
+        update_password: always
+        password: "{{ new_root_password | password_hash('sha512', 'mysalt') }}"
 
     # Change SSH config to restrict login
     - name: 'Replace SSH config to allow SSH User and Root to SSH with Key.'
       file:
-              state: absent
-              path: "/etc/ssh/sshd_config"
+        state: absent
+        path: "/etc/ssh/sshd_config"
     - file:
-              state: touch
-              path: "/etc/ssh/sshd_config"
+        state: touch
+        path: "/etc/ssh/sshd_config"
     - lineinfile:
-              state: present
-              insertafter: EOF
-              dest: "/etc/ssh/sshd_config"
-              line: "{{ item }}"
+        state: present
+        insertafter: EOF
+        dest: "/etc/ssh/sshd_config"
+        line: "{{ item }}"
       with_items:
-              - "ChallengeResponseAuthentication no"
-              - "UsePAM yes"
-              - "X11Forwarding yes"
-              - "PrintMotd no"
-              - "AcceptEnv LANG LC_*"
-              - "Subsystem sftp  /usr/lib/openssh/sftp-server"
-              - ""
-              - "# allow root and {{ ansible_user }} to ssh"
-              - "AllowUsers {{ ansible_user }} root"
-              - ""
-              - "Match User {{ ansible_user }}"
-              - "PasswordAuthentication yes"
-              - ""
-              - "# but limit root to SSH key only"
-              - "PermitRootLogin yes"
-              - "Match User root"
-              - "PasswordAuthentication no"
+        - "ChallengeResponseAuthentication no"
+        - "UsePAM yes"
+        - "X11Forwarding yes"
+        - "PrintMotd no"
+        - "AcceptEnv LANG LC_*"
+        - "Subsystem sftp  /usr/lib/openssh/sftp-server"
+        - ""
+        - "# allow root and {{ ansible_user }} to ssh"
+        - "AllowUsers {{ ansible_user }} root"
+        - ""
+        - "Match User {{ ansible_user }}"
+        - "PasswordAuthentication yes"
+        - ""
+        - "# but limit root to SSH key only"
+        - "PermitRootLogin yes"
+        - "Match User root"
+        - "PasswordAuthentication no"
 
     - name: 'Delete current netplan config'
       file:
-       state: absent
-       path: /etc/netplan/50-cloud-init.yaml
+        state: absent
+        path: /etc/netplan/50-cloud-init.yaml
 
     - name: 'Set netplan /etc/netplan/50-cloud-init.yaml'
       blockinfile:
-       marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
-       create: yes
-       path: "/etc/netplan/50-cloud-init.yaml"
-       block: |
-                network:
-                    version: 2
-                    renderer: networkd
-                    ethernets:
-                         eno1:
-                                dhcp4: no
-                                dhcp6: no
-                                addresses:
-                                        - {{ new_ip_address }}
-                                gateway4: {{ new_gateway }}
-                                nameservers:
-                                        search:
-                                                - {{ dns_search }}
-                                        addresses:
-                                                - {{ dns_nameservers.1 }}
-                                                - {{ dns_nameservers.2 }}
+        marker: "#####  ANSIBLE GENERATED ################################################## [ {mark} ]"
+        create: yes
+        path: "/etc/netplan/50-cloud-init.yaml"
+        block: |
+          network:
+              version: 2
+              renderer: networkd
+              ethernets:
+                   eno1:
+                          dhcp4: no
+                          dhcp6: no
+                          addresses:
+                                  - {{ new_ip_address }}
+                          gateway4: {{ new_gateway }}
+                          nameservers:
+                                  search:
+                                          - {{ dns_search }}
+                                  addresses:
+                                          - {{ dns_nameservers.1 }}
+                                          - {{ dns_nameservers.2 }}
 
     - name: "Remove {{ ansible_user }} from all groups"
-      user:                            
-       name: "{{ ansible_user }}"                       
-       groups: ''                             
-       append: no
+      user:
+        name: "{{ ansible_user }}"
+        groups: ''
+        append: no
 
     - name: 'Reboot to apply netplan and restart sshd at same time'
       command: reboot

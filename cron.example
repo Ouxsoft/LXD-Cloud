@@ -36,7 +36,7 @@
 # get and email a list of server processes
 30 11 * * *    root    screen -d -m ansible-playbook	/etc/ansible/playbooks/linux_all/status/processes/playbook.yaml 
 
-# kill any hung ansible processes that should be done by now
+# kill any hung Ansible processes that should be done by now
 55 1 * * *	root	killall --older-than 1h ansible-playbook
 
 # remove old hosts files backup
@@ -47,7 +47,7 @@
 # SYS ADMIN MANUAL TASKS
 #
 # AT LEAST WEEKLY : check status of LXD Cloud
-# /etc/ansible/whatisup.sh
+# /etc/ansible/status.sh
 #
 # AT LEAST WEEKLY : update servers packages with oversight
-# screen -d -m ansible-playbook /etc/ansible/playbooks/linux_all/updates/playbook.yaml 
+# screen -d -m ansible-playbook /etc/ansible/playbooks/linux_all/updates/playbook.yaml

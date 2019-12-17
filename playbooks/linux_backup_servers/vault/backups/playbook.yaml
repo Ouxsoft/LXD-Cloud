@@ -46,7 +46,7 @@
                         name: root
                         generate_ssh_key: yes
                         ssh_key_bits: 2048
-                        ssh_key_file: "{{ playbook_dir }}/{{ backup_server }}"
+                        ssh_key_file: "{{ playbook_dir }}/ssh_keys/{{ backup_server }}"
 -
         become: true
         become_method: su
@@ -73,7 +73,7 @@
                 # add ssh key to backup server
                 - name: add SSH private key to backup server
                   copy:
-                          content: "{{ lookup('file', '{{ backup_server }}') }}"
+                          content: "{{ lookup('file', '{{ playbook_dir}}/ssh_keys/{{ backup_server }}') }}"
                           dest: '/root/.ssh/lxd_hosts'
                           owner: root
                           group: root
@@ -81,7 +81,7 @@
                 
                 # add ssh key to backup server
                 - name: add SSH public key to hosts
-                  include_tasks: public_key_add.yaml backup_server="{{ backup_server }}"
+                  include_tasks: public_key_add.yaml backup_server="{{ playbook_dir }}/ssh_keys/{{ backup_server }}"
                   vars:
                           backup_target_hostname: "{{ item }}" 
                   with_items: "{{ hostvars[inventory_hostname]['backup'] }}"

@@ -55,6 +55,11 @@
             default: "Ansible-Default-Provision-Password"
             private: no
 
+          - name: "ssh_username"
+            prompt: "Set SSH user name?"
+            default: "{{ hostvars['localhost']['ansible_user'] | default('') }}"
+            private: no
+
           - name: "ssh_user_pwd"
             prompt: "Set SSH user password?"
             default: "{{ hostvars['localhost']['ansible_ssh_pass'] | default('') }}"
@@ -63,7 +68,6 @@
   tasks:
           - set_fact:
                   container_hostname: "{{ container_fqdn | trim | regex_replace('.' + dns_search) }}"
-                  ssh_username: "it"  
                   container_fqdn: "{{ container_fqdn | trim }}"
                   ssh_user_pwd: "{{ ssh_user_pwd | trim }}"
 

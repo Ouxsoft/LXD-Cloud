@@ -307,10 +307,10 @@
               - "AcceptEnv LANG LC_*"
               - "Subsystem sftp  /usr/lib/openssh/sftp-server"
               - ""
-              - "# allow root and {{ ssh_username }} to ssh"
-              - "AllowUsers {{ ssh_username }} root"
+              - "# allow root and {{ ansible_user }} to ssh"
+              - "AllowUsers {{ ansible_user }} root"
               - ""
-              - "Match User {{ ssh_username }}"
+              - "Match User {{ ansible_user }}"
               - "PasswordAuthentication yes"
               - ""
               - "# but limit root to SSH key only"
@@ -346,9 +346,9 @@
                                                 - {{ dns_nameservers.1 }}
                                                 - {{ dns_nameservers.2 }}
 
-    - name: "Remove {{ ssh_username }} from all groups"
+    - name: "Remove {{ ansible_user }} from all groups"
       user:                            
-       name: "{{ ssh_username }}"                       
+       name: "{{ ansible_user }}"                       
        groups: ''                             
        append: no
 

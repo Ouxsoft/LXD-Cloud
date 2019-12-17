@@ -5,9 +5,9 @@
   gather_facts: no
 
   vars_prompt:
-    - name: "new_ip_address"
-      prompt: "What should the last part of the IP address be for this server (within the 172.16.0.___/23)?"
-      default: "255"
+    - name: "new_cidr_address"
+      prompt: "What should the CIDR be for this server?"
+      default: "172.16.0.8/23"
       private: no
     - name: "new_domain_name"
       prompt: "What should the domain name of the new machine be?"
@@ -150,7 +150,7 @@
                IPv6AcceptRA=no
 
     # Change SSH config to allow it only to login
-    - name: "Replace SSH config to allow user {{ ssh_username }} and root to SSH."
+    - name: "Replace SSH config to allow user {{ ansible_user }} and root to SSH."
       file:
               state: absent
               path: "/etc/ssh/sshd_config"
@@ -170,8 +170,8 @@
               - "AcceptEnv LANG LC_*"
               - "Subsystem sftp  /usr/lib/openssh/sftp-server"
               - ""
-              - "# allow root and {{ ssh_username }} to ssh"
-              - "AllowUsers {{ ssh_username }} root"
+              - "# allow root and {{ ansible_user }} to ssh"
+              - "AllowUsers {{ ansible_user }} root"
               - "PasswordAuthentication yes"
               - "PermitRootLogin yes"
               - ""
@@ -201,7 +201,7 @@
                         # standard network 
                         standard:
                                 addresses:
-                                       - 172.16.0.{{ new_ip_address }}/23
+                                       - {{ new_cidr_address }}
                                 gateway4: 172.16.0.1
                                 routes:
                                         - to: 0.0.0.0/0
@@ -254,9 +254,9 @@
     - name: 'Setup remote LXD'
       shell: "lxc config set core.trust_password {{ lxd_pwd }}"
 
-    - name: "Remove {{ ssh_username }} from all groups"
+    - name: "Remove {{ ansible_user }} from all groups"
       user:                            
-       name: "{{ ssh_username }}"                        
+       name: "{{ ansible_user }}"                        
        groups: ''                             
        append: no
 

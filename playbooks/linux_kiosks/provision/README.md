@@ -4,8 +4,8 @@ Install Ubuntu 18.04 LTS server from a DVD.
 	Skip proxy address
 	Do not change the mirror/repos-- leave it as the Ubuntu repository -- the script will handle that
 	During the installation use the whole harddrive for the partition. 
-	The user created should be called the "{{ ssh_username }}"
-	Use the standard "{{ ssh_username }}" password for the user.
+	The user created should be called the "{{ ansible_user }}"
+	Use the standard "{{ ansible_user }}" password for the user.
 	Select no on import SSH identity
 	Do not install any snaps
 
@@ -16,7 +16,7 @@ After the install, run ip addr and write down the IP address assigned and place 
 
 Then enable the user to SSH by editing /etc/ssh/sshd_config and adding the following lines:
 
-	AllowUsers {{ ssh_username }}
+	AllowUsers {{ ansible_user }}
 	PasswordAuthentication yes 
 
 Restart SSH

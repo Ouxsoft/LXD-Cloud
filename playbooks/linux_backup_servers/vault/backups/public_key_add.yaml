@@ -4,7 +4,7 @@
           authorized_key:
               user: root
               state: present
-              key: "{{ lookup('file', '{{ backup_server }}.pub') }}"
+              key: "{{ lookup('file', '{{ playbook_dir }}/ssh_keys/{{ backup_server }}.pub') }}"
               exclusive: True
           delegate_to: "{{ backup_target_hostname }}"
     rescue:

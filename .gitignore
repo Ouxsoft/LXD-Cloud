@@ -9,7 +9,6 @@ host_vars/*
 
 # omit host file
 hosts
-!hosts.example
 
 # omit cron
 cron

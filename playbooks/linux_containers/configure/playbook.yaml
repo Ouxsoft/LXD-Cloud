@@ -77,7 +77,6 @@
                               #                    path: /etc/hosts.deny
                               #                    block: |
                               #                             all:all
-                              # ssh as it only?      
 
 
           - name: Remove "sudo" package
@@ -87,7 +86,7 @@
 
           - name: 'Remove SSH user from all groups'
             user:
-                name: "{{ ssh_username }}"
+                name: "{{ ansible_user }}"
                 groups: ''
                 append: no
 

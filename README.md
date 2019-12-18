@@ -2,6 +2,10 @@
 
 *LXD Cloud provides lightweight server management using the power of LXD and Ansible.*
 
+![GitHub](https://img.shields.io/github/license/hxtree/LXD-Cloud)
+![GitHub issues](https://img.shields.io/github/issues/hxtree/LXD-Cloud)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/hxtree)
+
 # Features
 + Automated host machine provisioning and configuration
 + Automated container provisioning and configuration

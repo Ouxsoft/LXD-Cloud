@@ -75,7 +75,7 @@
             #                    create: yes
             #                    path: /etc/hosts.deny
             #                    block: |
-          #                             all:all
+            #                             all:all
 
 
     - name: Remove "sudo" package

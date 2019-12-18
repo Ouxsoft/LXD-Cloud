@@ -26,8 +26,7 @@ $ ansible-galaxy collection install hxtree.lxd_cloud
 
 # Ansible Installation
 
-If you're not running Ansible already following these instructions to install. If you don't already have Ansible 
-installed, complete the following:
+If you're not running Ansible already, following these instructions to install:
 
 On Ubuntu:
 ```
@@ -38,7 +37,7 @@ $ sudo apt install ansible
 ```
 
 On RHEL and CentOS:
-```shell script
+```
 $ sudo yum install ansible
 ```
 

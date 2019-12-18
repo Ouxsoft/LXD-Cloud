@@ -1,6 +1,6 @@
 # LXD Cloud
 
-*LXD Cloud provides lightweight server management using the power of LXD and Ansible.
+*LXD Cloud provides lightweight server management using the power of LXD and Ansible.*
 
 # Features
 + Automated host machine provisioning and configuration
@@ -13,7 +13,6 @@
 
 # Quickstart
 Install Ansible
-
 
 On Ubuntu
 ```shell script

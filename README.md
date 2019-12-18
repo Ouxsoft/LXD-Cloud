@@ -17,12 +17,12 @@ LXD is available on [Ansible  Galaxy Listing](https://galaxy.ansible.com/hxtree/
 
 Install with Ansible Galaxy
 ```
-ansible-galaxy collection install hxtree.lxd_cloud
+$ ansible-galaxy collection install hxtree.lxd_cloud
 ```
 
 # Ansible Installation
 
-If you don't already have Ansible installed complete the following
+Ansible is required to run this collection. If you don't already have Ansible installed, complete the following:
 
 On Ubuntu
 ```
@@ -40,15 +40,15 @@ $ sudo yum install ansible
 
 On Fedora:
 
-```shell script
+```
 $ sudo dnf install ansible
 ```
 
-```shell script
+```
 $ cd /etc/ansible
 ```
 
-```shell script
+```
 $ git clone https://github.com/hxtree/LXD-Cloud
 ```
 

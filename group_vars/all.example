@@ -1,8 +1,0 @@
-ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
-ansible_user: "ubuntu"
-ansible_ssh_pass: "password-1234"
-db: { "codd" : { "lxc" : { "host" : "db.example.com", "user" : "lxc", "password" : "INSERT PASSWORD", "database" : "lxc" } } }
-mail: { "host" : "smtp.gmail.com", "port" : 587, "username" : "you@example.com", "password" : "INSERT PASSWORD", "to" : "You <you@example.com>" }
-dns: { "8.8.8.8" }
-dns_search: example.com
-nagios_template: generic-template

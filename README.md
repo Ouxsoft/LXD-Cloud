@@ -17,7 +17,7 @@
 
 # Quickstart
 
-LXD is available on [Ansible  Galaxy Listing](https://galaxy.ansible.com/hxtree/lxd_cloud)
+LXD Cloud is available on [Ansible  Galaxy Listing](https://galaxy.ansible.com/hxtree/lxd_cloud)
 
 Install with Ansible Galaxy
 ```

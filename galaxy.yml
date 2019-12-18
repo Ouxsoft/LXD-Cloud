@@ -8,16 +8,16 @@ dependencies:
 license:
         - "MIT"
 tags:
-        - ansible
-        - lxd
-        - backups
-        - rotates
-        - kiosks
-        - nagios
-        - cloud
-        - provision
-        - configure
-        - hard-link
-        - server
-        - management
+        - "ansible"
+        - "lxd"
+        - "backups"
+        - "rotates"
+        - "kiosks"
+        - "nagios"
+        - "cloud"
+        - "provision"
+        - "configure"
+        - "hard link"
+        - "server"
+        - "management"
 repository: "https://github.com/hxtree/LXD-Cloud"

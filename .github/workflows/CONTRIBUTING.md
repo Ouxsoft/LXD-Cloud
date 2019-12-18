@@ -11,10 +11,14 @@
 
 The following commands can be used to perform the initial checkout of LXD Cloud:
 
-```bash
+```
 $ git clone git://github.com/hxtree/LXD-Cloud.git
+```
 
-$ cd pxp
+Building package:
+```
+$ cd lxd_cloud
+$ ansible-galaxy collection build
 ```
 
 ## Reporting issues

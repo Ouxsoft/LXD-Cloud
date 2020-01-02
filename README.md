@@ -2,6 +2,10 @@
 
 *LXD Cloud provides lightweight server management using the power of LXD and Ansible.*
 
+![GitHub](https://img.shields.io/github/license/hxtree/LXD-Cloud)
+![GitHub issues](https://img.shields.io/github/issues/hxtree/LXD-Cloud)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/hxtree)
+
 # Features
 + Automated host machine provisioning and configuration
 + Automated container provisioning and configuration
@@ -12,10 +16,20 @@
 + Automated Nagios integration
 
 # Quickstart
-Install Ansible
 
-On Ubuntu
-```shell script
+LXD Cloud is available on [Ansible  Galaxy Listing](https://galaxy.ansible.com/hxtree/lxd_cloud)
+
+Install with Ansible Galaxy
+```
+$ ansible-galaxy collection install hxtree.lxd_cloud
+```
+
+# Ansible Installation
+
+If you're not running Ansible already, following these instructions to install:
+
+On Ubuntu:
+```
 $ sudo apt update
 $ sudo apt install software-properties-common
 $ sudo apt-add-repository --yes --update ppa:ansible/ansible
@@ -23,39 +37,36 @@ $ sudo apt install ansible
 ```
 
 On RHEL and CentOS:
-
-```shell script
+```
 $ sudo yum install ansible
 ```
 
 On Fedora:
-
-```shell script
+```
 $ sudo dnf install ansible
 ```
 
-```shell script
-$ cd /etc/ansible
+Next, clone LXD Cloud repo:
 ```
-
-```shell script
+$ cd /etc/ansible/
 $ git clone https://github.com/hxtree/LXD-Cloud
 ```
 
-## System Configuration
-Setup each of the following Ansible files. For additional information reference [Ansible documentation](https://docs.ansible.com/).
-
-Groups and Hosts
-```shell script
+Setup listing of Groups and Hosts (reference [Ansible docs](https://docs.ansible.com/)):
+```
 $ vim /etc/ansible/hosts
 ```
 
-Variables related to more then one host
-```shell script
+Setup variables related to more then one host (reference [Ansible docs](https://docs.ansible.com/)):
+```
 $ vim /etc/ansible/group_vars
 ```
 
-Variables related to a single host
-```shell script
+Setup variables related to a single host (reference [Ansible docs](https://docs.ansible.com/)):
+```
 $ /etc/ansible/host_vars
 ```
+
+# Contribute
+Please refer to [CONTRIBUTING.md](https://github.com/hxtree/LXD-Cloud/blob/master/.github/workflows/CONTRIBUTING.md) 
+for information on how to contribute to LXD Cloud.

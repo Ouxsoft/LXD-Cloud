@@ -1,6 +1,8 @@
 ---
-- hosts: aws_ec2
-  sudo: False
+- hosts: 
+  - aws_ec2
+  - linux_containers
+  become: False
   connection: ssh
 
   tasks:

@@ -68,6 +68,11 @@ Setup variables related to a single host (reference [Ansible docs](https://docs.
 $ /etc/ansible/host_vars
 ```
 
+Set ansible.cfg remote tmp to avoid user permissions issues
+```
+remote_tmp = /tmp/.ansible-${USER}/tmp
+```
+
 # Contribute
 Please refer to [CONTRIBUTING.md](https://github.com/hxtree/LXD-Cloud/blob/master/.github/workflows/CONTRIBUTING.md) 
 for information on how to contribute to LXD Cloud.

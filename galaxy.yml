@@ -1,6 +1,6 @@
 namespace: "hxtree"
 name: "lxd_cloud"
-version: "0.8.8"
+version: "1.0.1"
 readme: "README.md"
 authors:
         - "Matthew Heroux <matthewheroux@gmail.com>"

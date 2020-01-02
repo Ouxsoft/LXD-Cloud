@@ -26,14 +26,14 @@
     - name: Recreate backup.log file and add header
       file:
         state: absent
-        path: "{{ backup_server }}.log"
+        path: "logs/{{ backup_server }}.log"
     - file:
         state: touch
-        path: "{{ backup_server }}.log"
+        path: "logs/{{ backup_server }}.log"
     - lineinfile:
         state: present
         insertafter: EOF
-        dest: "{{ backup_server }}.log"
+        dest: "logs/{{ backup_server }}.log"
         line: "{{ item }}"
       with_items:
         - "{{ timestamp }}### START ###"
@@ -71,17 +71,18 @@
     # add ssh key to backup server
     - name: add SSH private key to backup server
       copy:
-        content: "{{ lookup('file', '{{ playbook_dir}}/ssh_keys/{{ backup_server }}') }}"
+        content: "{{ lookup('file', '{{ playbook_dir }}/ssh_keys/{{ backup_server }}') }}"
         dest: '/root/.ssh/lxd_hosts'
         owner: root
         group: root
         mode: 0400
 
-    # add ssh key to backup server
+    # add ssh key to host machine
     - name: add SSH public key to hosts
-      include_tasks: public_key_add.yaml backup_server="{{ playbook_dir }}/ssh_keys/{{ backup_server }}"
+      include_tasks: public_key_add.yaml
       vars:
         backup_target_hostname: "{{ item }}"
+        backup_server: "{{ backup_server }}"
       with_items: "{{ hostvars[inventory_hostname]['backup'] }}"
       when: hostvars[inventory_hostname]['backup'] | default([]) | length > 0 and hostvars[item]['ansible_become_pass'] is defined
 
@@ -109,7 +110,7 @@
       lineinfile:
         state: present
         insertafter: EOF
-        dest: "{{ backup_server }}.log"
+        dest: "logs/{{ backup_server }}.log"
         line: "{{ item.stdout | default('') | trim() }}"
       with_items:
         - { stdout: "{{ key_log }}" }
@@ -144,25 +145,25 @@
           lineinfile:
             state: present
             insertafter: EOF
-            dest: "{{ backup_server }}.log"
+            dest: "logs/{{ backup_server }}.log"
             line: "{{ item.stdout | default('') | trim() }}"
           with_items:
             - "{{ backup_log | default('') }}"
           delegate_to: localhost
-
-    - rescue:
+      rescue:
 
         # line files
         - lineinfile:
             state: present
             insertafter: EOF
-            dest: "{{ backup_server }}.log"
+            dest: "logs/{{ backup_server }}.log"
             line: "{{ item }}"
           with_items:
             - "{{ timestamp }}{{ inventory_hostname }} backups [FAIL]"
           delegate_to: localhost
-- # Mail backup log
-  hosts: localhost
+
+  # Mail backup log
+- hosts: localhost
   vars:
     # setup variables
     timestamp: "[{{ ansible_date_time.date }} {{ ansible_date_time.time }}] "
@@ -173,7 +174,7 @@
       lineinfile:
         state: present
         insertafter: EOF
-        dest: "{{ backup_server }}.log"
+        dest: "logs/{{ backup_server }}.log"
         line: "{{ timestamp }}###  END  ###"
       delegate_to: localhost
 
@@ -186,5 +187,5 @@
         password: "{{ mail.password }}"
         to: "{{ mail.to }}"
         subject: "[{{ ansible_date_time.date }}] Ansible > Vault Backup > {{ backup_server }}"
-        body: "{{ lookup('file', '{{ backup_server }}.log') | replace('\n','<br/>') | replace('[PASS]', '[<span style=\"color:green\">PASS</span>]') | replace('[FAIL]','[<span style=\"color:red\">FAIL</span>]') }}"
+        body: "{{ lookup('file', 'logs/{{ backup_server }}.log') | replace('\n','<br/>') | replace('[PASS]', '[<span style=\"color:green\">PASS</span>]') | replace('[FAIL]','[<span style=\"color:red\">FAIL</span>]') }}"
         subtype: html

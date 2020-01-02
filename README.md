@@ -24,6 +24,7 @@ Install with Ansible Galaxy
 $ ansible-galaxy collection install hxtree.lxd_cloud
 ```
 
+
 # Ansible Installation
 
 If you're not running Ansible already, following these instructions to install:

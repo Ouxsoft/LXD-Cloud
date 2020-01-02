@@ -13,15 +13,6 @@
     - meta: end_play
       when: backup_server is not defined
 
-    # recreate ssh_config
-    - name: Recreate ssh_config
-      file:
-        state: absent
-        path: ssh_config
-    - file:
-        state: touch
-        path: ssh_config
-
     # recreate backup.log
     - name: Recreate backup.log file and add header
       file:

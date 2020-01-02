@@ -3,7 +3,7 @@
     - linux_backup_servers
     - lxd_hosts
     - linux_containers
-  sudo: False
+  become: False
   connection: ssh
 
   tasks:

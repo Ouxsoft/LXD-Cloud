@@ -7,7 +7,7 @@
   vars_prompt:
     - name: "new_cidr_address"
       prompt: "What should the CIDR be for this server?"
-      default: "172.16.0.8/23"
+      default: "172.16.0.7/23"
       private: no
     - name: "new_domain_name"
       prompt: "What should the domain name of the new machine be?"
@@ -22,29 +22,38 @@
     password_generate: "{{ lookup('password', '/dev/null length=24 chars=ascii_letters') }}"
 
   pre_tasks:
-    - name: 'install python2'
-      raw: sudo apt-get -y install python
+    - name: 'install python'
+      raw: sudo apt -y install python3
 
   tasks:
-    - name: 'Add repo part 1'
+
+    - name: "Add repo part {{ repository.1 }}"
       apt_repository:
         repo: "{{ repository.1 }}"
         state: present
+        update_cache: no
 
-    - name: 'Add repo part 2'
+    - name: "Add repo part {{ repository.2 }}"
       apt_repository:
         repo: "{{ repository.2 }}"
         state: present
+        update_cache: no
 
-    - name: 'Add repo part 3'
+    - name: "Add repo part {{ repository.3 }}"
       apt_repository:
         repo: "{{ repository.3 }}"
         state: present
+        update_cache: no
 
-    - name: 'Add repo part 4'
+    - name: "Add repo part {{ repository.4 }}"
       apt_repository:
         repo: "{{ repository.4 }}"
         state: present
+        update_cache: no
+
+    - name: 'Run apt update'
+      apt:
+        update_cache: yes
 
     - name: 'Apt upgrade'
       apt:
@@ -66,9 +75,13 @@
           - lxd
           - openssh-server
           - tcpdump
+          - python3-pip
           - python-paramiko
           - python-mysqldb
-          - python-pexpect
+
+    - pip:
+            name:
+                    - pexpect
 
     - name: 'Add hosts allow'
       blockinfile:

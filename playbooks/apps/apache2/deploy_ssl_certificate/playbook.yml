@@ -1,0 +1,30 @@
+---
+- hosts:
+        - apache2_servers
+  become: True
+  become_method: su
+  vars:
+          src_dir: 'certs/'
+  vars_prompt:
+        - name: 'dest_dir'
+          prompt: 'Where do you want to copy the /certs to?'
+          default: '/etc/apache2/ssl/'
+          private: no
+  tasks:
+        - name: 'Add SSL certificate to remote server'
+          copy:
+                  src:    '{{ item.src }}'
+                  dest:   '{{ item.dest }}'
+                  owner:  root
+                  group:  root
+                  mode:   '{{ item.mode }}'
+                  remote_src: no
+          no_log: true
+          with_items:
+                  - src:  '{{ src_dir }}'
+                    dest: '{{ dest_dir }}'
+                    mode: '0644'
+        - name: 'Restart apache2'
+          service:
+             name: apache2
+             state: restarted

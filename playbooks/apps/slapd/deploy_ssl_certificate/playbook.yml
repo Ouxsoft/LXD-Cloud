@@ -1,0 +1,35 @@
+---
+- hosts:
+        - ldap_group
+  become: True
+  become_method: su
+  vars:
+          src_dir: 'certs/'
+  vars_prompt:
+        - name: 'dest_dir'
+          prompt: 'Where do you want to copy the /certs to?'
+          default: '/etc/ldap/certs-digi/'
+          private: no
+  tasks:
+        - name: 'Stop SLAPD'
+          service:
+             name: slapd
+             state: stopped
+        
+        - name: 'Add certificates to remote server'
+          copy:
+                  src:    '{{ item.src }}'
+                  dest:   '{{ item.dest }}'
+                  owner:  openldap
+                  group:  openldap
+                  mode:   '{{ item.mode }}'
+                  remote_src: no
+          no_log: true
+          with_items:
+                  - src:  '{{ src_dir }}'
+                    dest: '{{ dest_dir }}'
+                    mode: '0644'
+        - name: 'Start SLAPD'
+          service:
+             name: slapd
+             state: started

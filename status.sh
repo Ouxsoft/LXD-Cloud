@@ -9,7 +9,10 @@
 # REQUIREMENTS
 #
 # apt install python-configparser
-#
+# 
+# Looking for a the host of a server? Pipe to grep
+# ./status.sh | grep -B 10 example.com
+# 
 
 # parse /etc/ansible/host file and get lxd_hosts
 function lxd_hosts_get {

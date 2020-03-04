@@ -28,7 +28,7 @@
 10 2 * * *     root	screen -d -m ansible-playbook	 /etc/ansible/lxd_cloud/playbooks/linux_backup_servers/vault/playbook.yaml --extra-vars "backup_server=vault-2.example.com"
 
 # update nagios hosts based /etc/ansible/hosts
-0 9 * * 2	root	ansible-playbook		/etc/ansible/lxd_cloud/playbooks/apps/nagios/hosts-update/playbook.yaml
+0 9 * * 2	root	ansible-playbook		/etc/ansible/lxd_cloud/playbooks/apps/nagios/sync-hosts/playbook.yaml
 
 # update LXD hosts machines packages using repo 
 0 8 * * 2	root	screen -d -m ansible-playbook	/etc/ansible/lxd_cloud/playbooks/linux_hosts/update/playbook.yaml

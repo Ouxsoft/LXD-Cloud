@@ -18,7 +18,7 @@
       private: no
 
   tasks:
-    - name: Update cess list
+    - name: Update list
       shell: updatedb
 
     - name: Locate file

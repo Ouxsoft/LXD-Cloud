@@ -1,0 +1,30 @@
+# locate a file from each server and show results
+- hosts:
+     - linux_backup_servers
+     - linux_kiosks
+     - linux_containers
+     - aws_ec2
+     - lxd_hosts
+
+  become: true
+  become_method: su
+  become_user: root
+  connection: ssh
+
+  vars_prompt:
+    - name: "locate_keyword"
+      prompt: "What kind are you trying to locate?"
+      default: "*.crt"
+      private: no
+
+  tasks:
+    - name: Update cess list
+      shell: updatedb
+
+    - name: Locate file
+      command: "locate {{ locate_keyword }}"
+      register: shell_output
+
+    - name: Output files found
+      debug:
+              msg: "{{ shell_output }}"

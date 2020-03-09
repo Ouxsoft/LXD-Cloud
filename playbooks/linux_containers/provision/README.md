@@ -6,7 +6,7 @@ How to start a new container
 
 	Step 2: Run the provision playbook
 
-		ansible-playbook /etc/ansible/playbooks/linux/containers/provision/playbook.yaml
+		ansible-playbook /etc/ansible/playbooks/linux_containers/provision/playbook.yaml
 
 	Step 3: Configure server
 
@@ -14,7 +14,7 @@ How to start a new container
 
 		e.g.
 
-			ansible-playbook /etc/ansible/playbooks/linux/containers/configure/playbook.yaml --extra-vars "container=sso.example.com"
+			ansible-playbook /etc/ansible/playbooks/linux_containers/configure/playbook.yaml --extra-vars "container=sso.example.com"
 
 	Step 3: Add host to approperiate host groups (it should already be there as a container)
 

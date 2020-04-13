@@ -1,0 +1,61 @@
+---
+- hosts:
+        - drupal_7_servers
+  become: True
+  become_method: su
+  vars:
+          download_url: 'https://ftp.drupal.org/files/projects/'
+          src_dir: '/var/www/'
+  vars_prompt:
+        - name: 'release_name'
+          prompt: 'Download and install which core release?'
+          default: 'drupal-7.69'
+          private: no
+  tasks:
+        - name: 'Download and unarchive new core'
+          unarchive:
+                  src: '{{ download_url }}{{ release_name}}.tar.gz'
+                  dest: '{{ src_dir}}'
+                  remote_src: yes
+                  owner: www-data
+                  group: www-data
+        - name: 'Change owner to www-data'
+          file:
+                  path: '{{ src_dir }}{{ release_name }}'
+                  state: directory
+                  owner: www-data
+                  group: www-data
+        - name: 'Delete {{ src_dir }}{{ release_name }}/{{ item }}'
+          file:
+                  path: '{{ src_dir }}{{ release_name }}/{{ item }}'
+                  state: absent
+          with_items:
+                  - 'sites'
+                  - 'INSTALL.txt'
+                  - 'INSTALL.mysql.txt'
+                  - 'INSTALL.pgsql.txt'
+                  - 'INSTALL.sqlite.txt'
+        - name: 'Copy {{ src_dir }}drupal/sites to {{ src_dir }}{{ release_name }}/sites'
+          copy: 
+                src: '{{ src_dir }}drupal/sites/'
+                dest: '{{ src_dir }}{{ release_name }}/sites'
+                owner: www-data
+                group: www-data
+                remote_src: yes
+        - name: 'Copy {{ src_dir }}drupal/.git to {{ src_dir }}{{ release_name }}/.git'
+          copy: 
+                src: '{{ src_dir }}drupal/.git/'
+                dest: '{{ src_dir }}{{ release_name }}/.git'
+                owner: www-data
+                group: www-data
+                remote_src: yes
+          ignore_errors: True
+        - name: 'Create symlink {{ src_dir }}drupal to {{ src_dir}}{{ release_name }}'
+          file: 
+                dest: '{{ src_dir }}drupal'
+                src: '{{ src_dir }}{{ release_name }}'
+                owner: www-data
+                group: www-data
+                state: link
+                remote_src: yes
+

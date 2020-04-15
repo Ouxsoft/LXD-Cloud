@@ -12,6 +12,14 @@
           default: 'drupal-7.69'
           private: no
   tasks:
+        - name: 'Check if release already exists'
+          stat: 
+                  path: '{{ src_dir }}{{ release_name }}'
+          register: release_present
+        - fail:
+                    msg="Stopping Playbook release exists"
+          when: release_present.stat.exists == True
+          
         - name: 'Download and unarchive new core'
           unarchive:
                   src: '{{ download_url }}{{ release_name}}.tar.gz'
@@ -58,4 +66,3 @@
                 group: www-data
                 state: link
                 remote_src: yes
-

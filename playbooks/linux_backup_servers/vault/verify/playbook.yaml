@@ -35,6 +35,7 @@
     - name: 'verify backups... this may take a while'
       shell: "/usr/bin/du --human-readable --time --summarize --total /vault/backup/*/daily/*/var/lib/lxd/storage-pools/*/containers/*/rootfs"
       register: "verify_responses"
+      ignore_errors: yes
 
     - set_fact:
         verify_log:  "{{ verify_log | default('') }}{{ verify_responses | default('') }}"

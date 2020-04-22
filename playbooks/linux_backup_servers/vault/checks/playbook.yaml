@@ -75,6 +75,6 @@
         username: "{{ mail.username }}"
         password: "{{ mail.password }}"
         to: "{{ mail.to }}"
-        subject: "[{{ ansible_date_time.date }}] Ansible > Verify Rotates > {{ backup_server }}"
+        subject: "[{{ ansible_date_time.date }}] Ansible > Vault Checks > {{ backup_server }}"
         body: "{{ lookup('file', '{{ backup_server }}-verify.log') | replace('\n','<br/>') | replace(' ','&nbsp;') }}"
         subtype: html

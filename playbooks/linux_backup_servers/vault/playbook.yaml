@@ -12,6 +12,6 @@
 - name: Run rotates playbook
   import_playbook: rotates/playbook.yaml backup_server="{{ backup_server }}"
 
-# verify
+# checks
 - name: Run verify playbook
-  import_playbook: verify/playbook.yaml backup_server="{{ backup_server }}"
+  import_playbook: checks/playbook.yaml backup_server="{{ backup_server }}"
